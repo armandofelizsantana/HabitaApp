@@ -34,6 +34,10 @@ public sealed class RegisterViewModel : BaseViewModel
 
     [Required(ErrorMessage = "El correo electrónico es requerido.")]
     [EmailAddress(ErrorMessage = "Ingresa un correo electrónico válido.")]
+    [RegularExpression(
+        @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        ErrorMessage = "Ingresa un correo electrónico válido con un dominio completo."
+    )]
     [Display(Name = "Correo electrónico")]
     public string Email { get; set; } = string.Empty;
 

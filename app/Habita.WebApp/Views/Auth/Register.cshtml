@@ -93,7 +93,7 @@ inputmode="tel" data-phone-mask required /></div>
 <label asp-for="Email" class="label-base"></label>
 <div class="relative"><input asp-for="Email"
 class="input-base" placeholder="tu@correo.com" autocomplete="email"
-required /></div>
+pattern="^[^@@\s]+@@[^@@\s]+\.[^@@\s]+$" required /></div>
 <p class="helper-text" data-role-copy="Client">Enviaremos aquí el enlace para activar tu cuenta.
 </p>
 <p class="helper-text hidden" data-role-copy="Agent">Te notificaremos cuando un administrador

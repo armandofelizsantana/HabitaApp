@@ -102,8 +102,8 @@ public class ExceptionMiddleware
                 exception,
                 "Ha ocurrido un error crítico no controlado en el servidor."
             );
-            message = exception.Message;
-            errorCode = exception.GetType().Name;
+            message = "Ha ocurrido un error inesperado en el servidor.";
+            errorCode = ErrorCodes.InternalServerError;
         }
 
         context.Response.StatusCode = statusCode;

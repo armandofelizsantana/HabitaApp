@@ -7,6 +7,7 @@ using Habita.Api.Extensions;
 using Habita.Api.Middlewares;
 using Habita.Api.Policies;
 using Habita.Application;
+using Habita.Domain.Common;
 using Habita.Domain.Settings;
 using Habita.Infrastructure.Identity;
 using Habita.Infrastructure.Persistence;
@@ -81,6 +82,19 @@ var app = builder.Build();
 await app.Services.RunIdentitySeedAsync();
 
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseStatusCodePages(async statusCodeContext =>
+{
+    var response = statusCodeContext.HttpContext.Response;
+    var (code, message) = response.StatusCode switch
+    {
+        StatusCodes.Status401Unauthorized => ("UNAUTHORIZED", "Se requiere autenticación para acceder a este recurso."),
+        StatusCodes.Status403Forbidden => ("FORBIDDEN", "No tienes permiso para realizar esta acción."),
+        StatusCodes.Status404NotFound => ("NOT_FOUND", "El recurso solicitado no fue encontrado."),
+        _ => ("HTTP_ERROR", "No se pudo completar la solicitud."),
+    };
+
+    await response.WriteAsJsonAsync(ApiResponse.Failure(code, message));
+});
 
 if (app.Environment.IsDevelopment())
 {

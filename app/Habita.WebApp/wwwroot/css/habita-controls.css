@@ -1,0 +1,11 @@
+html, body {
+    --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
+    --default-font-family: "Source Sans 3", "Segoe UI", sans-serif;
+    font-family: "Source Sans 3", "Segoe UI", sans-serif;
+}
+button, input, select, textarea { font-family: inherit; }
+.habita-text-control { width: auto !important; min-width: 2.75rem; padding-inline: .75rem; font-size: .875rem; font-weight: 600; white-space: nowrap; }
+[data-toggle-password] { width: auto; padding-inline: .65rem; font-size: .8rem; font-weight: 600; }
+input:has(+ [data-toggle-password]) { padding-right: 5rem !important; }
+
+#sidebar > div:first-child > a > div { display: none; }

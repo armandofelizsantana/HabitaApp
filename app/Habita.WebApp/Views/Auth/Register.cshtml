@@ -1,0 +1,201 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Crear cuenta";
+    Layout = "_LayoutAuth";
+    var errorKeys = ViewData.ModelState
+        .Where(entry => entry.Value?.Errors.Count > 0)
+        .Select(entry => entry.Key)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    var initialStep = errorKeys.Overlaps([nameof(Model.FirstName), nameof(Model.LastName), nameof(Model.SelectedRole)])
+        ? 1
+        : errorKeys.Overlaps([nameof(Model.Phone), nameof(Model.Email)])
+            ? 2
+            : errorKeys.Count > 0
+                ? 3
+                : 1;
+}
+
+<section class="habita-register" aria-labelledby="register-title">
+    <header class="habita-register-heading">
+        <div>
+            <p class="habita-register-eyebrow">UNA CUENTA, NUEVAS POSIBILIDADES</p>
+            <h1 id="register-title">Tu lugar en Habita</h1>
+            <p>Crea tu cuenta para empezar a buscar o compartir propiedades.</p>
+        </div>
+        <span class="habita-register-badge">Registro</span>
+    </header>
+    <div class="habita-register-sheet">
+        <nav class="habita-register-nav" aria-label="Progreso del registro">
+            <span class="is-active" data-step-indicator="1" aria-current="step">Sobre ti</span>
+            <span data-step-indicator="2">Cómo contactarte</span>
+            <span data-step-indicator="3">Tu cuenta</span>
+        </nav>
+        <div class="habita-register-body">
+            <p id="step-counter" class="habita-register-counter" aria-live="polite">Paso 1 de 3</p>
+<form asp-action="Register" asp-controller="Auth" method="post" enctype="multipart/form-data"
+id="register-form" data-register-stepper data-initial-step="@initialStep" data-auth-form novalidate>
+@Html.AntiForgeryToken()
+<div class="auth-honeypot" aria-hidden="true">
+<label asp-for="Website">Sitio web</label>
+<input asp-for="Website" tabindex="-1" autocomplete="off" />
+</div>
+
+<div asp-validation-summary="All" class="validation-summary mb-5" role="alert"></div>
+
+<div data-step-panel="1" class="auth-step-panel space-y-6">
+<div class="habita-register-section-heading">
+<h2>Empecemos por conocerte</h2>
+<p>Indica tu nombre y elige cómo participarás en Habita.</p>
+</div>
+<div class="habita-register-fields">
+<div class="space-y-1.5">
+<label asp-for="FirstName" class="label-base"></label>
+<input asp-for="FirstName" class="input-base" placeholder="Escribe tu nombre" autocomplete="given-name" required />
+<span asp-validation-for="FirstName" class="field-validation"></span>
+</div>
+<div class="space-y-1.5">
+<label asp-for="LastName" class="label-base"></label>
+<input asp-for="LastName" class="input-base" placeholder="Escribe tu apellido" autocomplete="family-name" required />
+<span asp-validation-for="LastName" class="field-validation"></span>
+</div>
+</div>
+<fieldset class="habita-register-roles">
+<legend>Tu actividad en la plataforma</legend>
+<label class="habita-register-role">
+<input asp-for="SelectedRole" id="role-client" type="radio" value="Client" />
+<span><strong>Cuenta de cliente</strong><small>Guarda inmuebles, conversa con agentes y envía tus ofertas.</small></span>
+</label>
+<label class="habita-register-role">
+<input asp-for="SelectedRole" id="role-agent" type="radio" value="Agent" />
+<span><strong>Cuenta de agente</strong><small>Publica tu cartera de propiedades y atiende a sus interesados.</small></span>
+</label>
+<span asp-validation-for="SelectedRole" class="field-validation"></span>
+</fieldset>
+</div>
+
+<div data-step-panel="2" class="auth-step-panel hidden space-y-6">
+<div>
+<h2 class="text-lg font-black text-default">Dónde podemos contactarte</h2>
+<p class="mt-1 text-sm text-muted">Usaremos estos datos para tu cuenta y notificaciones
+importantes.</p>
+</div>
+
+<div class="space-y-1.5">
+<label asp-for="Phone" class="label-base"></label>
+<div class="relative"><input asp-for="Phone"
+type="tel" class="input-base" placeholder="809-555-1234" autocomplete="tel"
+inputmode="tel" data-phone-mask required /></div>
+<p class="helper-text">Números 809, 829 o 849 en formato 000-000-0000.</p>
+<span asp-validation-for="Phone" class="field-validation"></span>
+</div>
+
+<div class="space-y-1.5">
+<label asp-for="Email" class="label-base"></label>
+<div class="relative"><input asp-for="Email"
+class="input-base" placeholder="tu@correo.com" autocomplete="email"
+required /></div>
+<p class="helper-text" data-role-copy="Client">Enviaremos aquí el enlace para activar tu cuenta.
+</p>
+<p class="helper-text hidden" data-role-copy="Agent">Te notificaremos cuando un administrador
+active tu cuenta.</p>
+<span asp-validation-for="Email" class="field-validation"></span>
+</div>
+</div>
+
+<div data-step-panel="3" class="auth-step-panel hidden space-y-5">
+<div>
+<h2 class="text-lg font-black text-default">Configura tu acceso y tu foto</h2>
+<p class="mt-1 text-sm text-muted">Crea tus credenciales y añade una foto reconocible.</p>
+</div>
+
+<div class="space-y-1.5">
+<label asp-for="UserName" class="label-base"></label>
+<div class="relative"><input
+asp-for="UserName" class="input-base" placeholder="usuario123"
+autocomplete="username" required /></div>
+<span asp-validation-for="UserName" class="field-validation"></span>
+</div>
+
+<div class="grid gap-4 sm:grid-cols-2">
+<div class="space-y-1.5">
+<label asp-for="Password" class="label-base"></label>
+<div class="relative"><input
+asp-for="Password" id="register-password" class="input-base pr-11"
+placeholder="Mínimo 8 caracteres" autocomplete="new-password" data-strength-input
+required /><button type="button" data-toggle-password="register-password"
+class="habita-text-control auth-password-toggle" aria-label="Mostrar u ocultar contraseña">Mostrar</button></div>
+<span asp-validation-for="Password" class="field-validation"></span>
+</div>
+<div class="space-y-1.5">
+<label asp-for="ConfirmPassword" class="label-base"></label>
+<div class="relative"><input
+asp-for="ConfirmPassword" id="register-confirm-password"
+class="input-base pr-11" placeholder="Repite la contraseña"
+autocomplete="new-password" required /><button type="button"
+data-toggle-password="register-confirm-password" class="habita-text-control auth-password-toggle"
+aria-label="Mostrar u ocultar contraseña">Mostrar</button></div>
+<span asp-validation-for="ConfirmPassword" class="field-validation"></span>
+</div>
+</div>
+
+<div class="surface-muted rounded-xl border border-default p-3" data-strength-meter>
+<div class="flex items-center justify-between text-xs"><span
+class="font-bold text-default">Seguridad de contraseña</span><span data-strength-label
+class="font-semibold text-muted">Sin evaluar</span></div>
+<div class="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+<div data-strength-bar class="h-full w-0 rounded-full transition-all duration-300"></div>
+</div>
+<div class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-muted sm:grid-cols-4">
+<span data-password-rule="length">8+ caracteres</span><span data-password-rule="case">Mayús.
+y minús.</span><span data-password-rule="number">Un número</span><span
+data-password-rule="symbol">Un símbolo</span>
+</div>
+</div>
+
+<div>
+<label class="label-base" for="photoFile">Foto de perfil</label>
+<div id="photo-drop-zone" class="auth-drop-zone" data-drop-zone>
+<input id="photoFile" name="PhotoFile" type="file" class="sr-only"
+accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" data-photo-input
+data-val="true" data-val-required="La foto de usuario es requerida." required />
+<label for="photoFile" class="block cursor-pointer">
+<span data-photo-placeholder class="flex flex-col items-center">
+
+<strong class="text-sm text-default">Arrastra tu foto o haz clic para
+buscar</strong>
+<small class="mt-1 text-xs text-muted">JPG, PNG o WebP · Máximo 15 MB</small>
+</span>
+<span data-photo-preview class="hidden items-center gap-4 pr-11 text-left">
+<img alt="Vista previa de foto de perfil"
+class="h-16 w-16 rounded-2xl object-cover ring-4 ring-brand-50 dark:ring-brand-100/20" />
+<span class="min-w-0 flex-1"><strong data-photo-name
+class="block truncate text-sm text-default"></strong><small
+class="text-xs text-muted">Imagen lista para subir</small></span>
+</span>
+</label>
+<button type="button" data-photo-remove
+class="habita-text-control absolute right-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-muted hover:bg-danger-50 hover:text-danger-700"
+aria-label="Quitar foto">Quitar foto</button>
+</div>
+@Html.ValidationMessage("PhotoFile", null, new { @class = "field-validation" })
+</div>
+</div>
+
+<div
+class="mt-8 flex flex-col-reverse items-stretch justify-between gap-3 border-t border-default pt-5 sm:flex-row sm:items-center">
+<button type="button" class="btn-ghost hidden" data-step-previous>Anterior</button>
+<a asp-action="Login"
+class="py-2 text-center text-xs font-semibold text-muted hover:text-brand-600 sm:mr-auto">Ya
+tengo una cuenta</a>
+<button type="button" class="btn-primary" data-step-next>Continuar</button>
+<button type="submit" class="auth-submit btn-primary hidden" data-step-submit
+data-submit-label="Crear cuenta en Habita"><span class="auth-submit-content">Crear cuenta en Habita</span></button>
+</div>
+</form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

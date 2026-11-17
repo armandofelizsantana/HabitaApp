@@ -1,0 +1,80 @@
+using Habita.Domain.Common;
+using Habita.Domain.Enums;
+using Habita.Domain.Events;
+
+namespace Habita.Domain.Entities;
+
+             
+                                                                      
+              
+public class Offer : AggregateRoot
+{
+    public int PropertyId { get; private set; }
+    public string ClientId { get; private set; } = null!;
+    public decimal Amount { get; private set; }
+    public OfferStatus Status { get; private set; }
+    public DateTimeOffset? RespondedAt { get; private set; }
+
+    public Property Property { get; private set; } = null!;
+
+    private Offer() { }
+
+    public static Result<Offer> Create(int propertyId, string clientId, decimal amount)
+    {
+        if (propertyId <= 0)
+            return Result.Failure<Offer>(
+                Error.Validation("Offer.PropertyId", "La propiedad es requerida.")
+            );
+        if (string.IsNullOrWhiteSpace(clientId))
+            return Result.Failure<Offer>(
+                Error.Validation("Offer.ClientId", "El cliente es requerido.")
+            );
+        if (amount <= 0)
+            return Result.Failure<Offer>(
+                Error.Validation("Offer.Amount", "El monto debe ser mayor que cero.")
+            );
+
+        return Result.Success(
+            new Offer
+            {
+                PropertyId = propertyId,
+                ClientId = clientId,
+                Amount = amount,
+                Status = OfferStatus.Pending,
+            }
+        );
+    }
+
+    public Result Accept()
+    {
+        if (Status != OfferStatus.Pending)
+            return Result.Failure(
+                Error.Conflict(
+                    "Offer.NotPendiente",
+                    "Solo ofertas pendientes pueden ser aceptadas."
+                )
+            );
+
+        Status = OfferStatus.Accepted;
+        RespondedAt = DomainTime.UtcNow;
+        RaiseEvent(new OfferAcceptedEvent(Id, PropertyId, ClientId, Amount, DomainTime.UtcNow));
+        Touch();
+        return Result.Success();
+    }
+
+    public Result Reject()
+    {
+        if (Status != OfferStatus.Pending)
+            return Result.Failure(
+                Error.Conflict(
+                    "Offer.NotPendiente",
+                    "Solo ofertas pendientes pueden ser rechazadas."
+                )
+            );
+
+        Status = OfferStatus.Rejected;
+        RespondedAt = DomainTime.UtcNow;
+        Touch();
+        return Result.Success();
+    }
+}

@@ -1,0 +1,28 @@
+using Habita.Domain.Common;
+using Habita.Domain.Entities;
+
+namespace Habita.Domain.Interfaces.Persistence.Repositories;
+
+             
+                                    
+              
+public interface IFavoritePropertyRepository : IGenericRepository<FavoriteProperty>
+{
+    Task<FavoriteProperty?> GetAsync(
+        string clientId,
+        int propertyId,
+        CancellationToken ct = default
+    );
+    Task<IReadOnlyList<FavoriteProperty>> GetByUserAsync(
+        string clientId,
+        QueryOptions<FavoriteProperty>? options = null,
+        CancellationToken ct = default
+    );
+    Task<bool> IsFavoritedAsync(string clientId, int propertyId, CancellationToken ct = default);
+    Task<IReadOnlySet<int>> GetPropertyIdsAsync(
+        string clientId,
+        IReadOnlyCollection<int> propertyIds,
+        CancellationToken ct = default
+    );
+    Task<int> CountByPropertyAsync(int propertyId, CancellationToken ct = default);
+}

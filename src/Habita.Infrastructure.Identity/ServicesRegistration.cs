@@ -71,6 +71,14 @@ public static class ServicesRegistration
                 };
                 opt.Events = new JwtBearerEvents
                 {
+                    OnAuthenticationFailed = context =>
+                    {
+                        var logger = context.HttpContext.RequestServices
+                            .GetRequiredService<ILoggerFactory>()
+                            .CreateLogger("JwtBearer");
+                        logger.LogWarning(context.Exception, "Falló la validación del token JWT.");
+                        return Task.CompletedTask;
+                    },
                     OnChallenge = context =>
                     {
                         context.HandleResponse();

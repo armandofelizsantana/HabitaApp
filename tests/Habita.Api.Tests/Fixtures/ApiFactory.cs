@@ -29,11 +29,6 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
                     new Dictionary<string, string?>
                     {
                         ["ConnectionStrings:RealEstateDb"] = _container.GetConnectionString(),
-                        ["JwtSettings:SecretKey"] =
-                            "ac51b1d53ca4154b6b5fc7258ee9bb1bc04b17941a5823fe8bb2b7f38249891ce10b3860ae4b5e982412a7ba1ae05971bb8bd94a6b03b2ce8f6af6d41b1fe834",
-                        ["JwtSettings:Issuer"] = "Habita_P3_Api",
-                        ["JwtSettings:Audience"] = "RealEstate_Users",
-                        ["JwtSettings:DurationInMinutes"] = "120",
                     }
                 );
             }

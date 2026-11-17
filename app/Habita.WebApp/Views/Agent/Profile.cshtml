@@ -3,45 +3,25 @@
     ViewData["Title"] = "Mi perfil";
 }
 
-<div class="mx-auto max-w-3xl space-y-7">
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">Perfil profesional</p>
-            <h1 class="mt-2 text-3xl font-black tracking-tight text-default">Tu identidad como asesor.</h1>
-            <p class="mt-2 text-sm text-muted">Mantén tus datos de contacto listos para cada cliente.</p>
-        </div><a asp-action="Edit" class="btn-primary">Editar perfil</a>
-    </header>
-    <section class="overflow-hidden rounded-3xl border border-default bg-(--color-bg-elevated) shadow-sm">
-        <div class="bg-linear-to-r from-slate-950 via-brand-700 to-brand-500 px-6 py-8 text-white sm:px-8">
-            <div class="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
-                @await Html.PartialAsync("~/Views/Shared/Components/_Avatar.cshtml", (Model.ProfileImage,
-                $"{Model.FirstName} {Model.LastName}", "xl", "ring - 4 ring - white / 40"))<div>
-                <h2 class="text-2xl font-black">@Model.FirstName @Model.LastName</h2>
-                <p class="mt-1 text-sm text-blue-100">Agente inmobiliario</p>
-            </div>
+<div class="habita-page mx-auto max-w-5xl space-y-7">
+    <header class="flex flex-wrap items-end justify-between gap-4 border-b border-default pb-5"><div><p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">Cuenta del agente</p><h1 class="mt-2 text-3xl font-black tracking-tight text-default">Mi perfil</h1><p class="mt-2 text-sm text-muted">Mantén actualizados los datos que ven tus clientes.</p></div><a asp-action="Edit" class="btn-primary">Editar perfil</a></header>
+
+    <section class="grid overflow-hidden rounded-3xl border border-default bg-(--color-bg-elevated) shadow-sm lg:grid-cols-[18rem_minmax(0,1fr)]" aria-label="Información del perfil">
+        <div class="flex flex-col items-center justify-center bg-brand-700 p-7 text-center text-white dark:bg-[#10594f]">
+            @await Html.PartialAsync("~/Views/Shared/Components/_Avatar.cshtml", (Model.ProfileImage, $"{Model.FirstName} {Model.LastName}", "xl", "ring-4 ring-white/30"))
+            <p class="mt-5 text-xs font-black uppercase tracking-[.15em] text-white/75">Agente inmobiliario</p>
+            <h2 class="mt-2 text-2xl font-black">@Model.FirstName @Model.LastName</h2>
+            <a asp-action="Edit" class="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-black text-brand-700 hover:bg-brand-50">Actualizar datos</a>
         </div>
-    </div>
-    <dl class="grid divide-y divide-default sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-        <div class="p-6">
-            <dt class="text-xs font-black uppercase tracking-[.14em] text-subtle">Correo profesional</dt>
-            <dd class="mt-2 flex items-center gap-2 font-semibold text-default"><i data-lucide="mail"
-                                                                                       class="h-4 w-4 text-brand-600"></i>@Model.Email</dd>
-            </div>
-            <div class="p-6">
-                <dt class="text-xs font-black uppercase tracking-[.14em] text-subtle">Teléfono</dt>
-                <dd class="mt-2 flex items-center gap-2 font-semibold text-default"><i data-lucide="phone"
-                                                                                           class="h-4 w-4 text-brand-600"></i>@(string.IsNullOrWhiteSpace(Model.Phone) ? "Sin teléfono registrado"           : Model.Phone)</dd>
-                </div>
-                <div class="p-6">
-                    <dt class="text-xs font-black uppercase tracking-[.14em] text-subtle">Usuario</dt>
-                    <dd class="mt-2 flex items-center gap-2 font-semibold text-default"><i data-lucide="at-sign"
-                                                                                               class="h-4 w-4 text-brand-600"></i>@Model.UserName</dd>
-                    </div>
-                    <div class="p-6">
-                        <dt class="text-xs font-black uppercase tracking-[.14em] text-subtle">Seguridad</dt>
-                        <dd class="mt-2"><a asp-controller="Auth" asp-action="ChangePassword"
-                                            class="inline-flex items-center gap-2 text-sm font-bold text-brand-700 hover:text-brand-800">Cambiar contraseña</a></dd>
-                        </div>
-                    </dl>
-                </section>
-            </div>
+
+        <div class="p-5 sm:p-8">
+            <div class="mb-5"><p class="text-xs font-black uppercase tracking-wider text-brand-600">Datos de contacto</p><h3 class="mt-1 text-xl font-black text-default">Tu información profesional</h3></div>
+            <dl class="grid gap-3 sm:grid-cols-2">
+                <div class="rounded-2xl bg-(--color-bg-muted) p-4"><dt class="text-xs font-black uppercase tracking-wider text-muted">Correo profesional</dt><dd class="mt-2 break-all font-semibold text-default">@Model.Email</dd></div>
+                <div class="rounded-2xl bg-(--color-bg-muted) p-4"><dt class="text-xs font-black uppercase tracking-wider text-muted">Teléfono</dt><dd class="mt-2 font-semibold text-default">@(string.IsNullOrWhiteSpace(Model.Phone) ? "Sin teléfono registrado" : Model.Phone)</dd></div>
+                <div class="rounded-2xl bg-(--color-bg-muted) p-4"><dt class="text-xs font-black uppercase tracking-wider text-muted">Nombre de usuario</dt><dd class="mt-2 font-semibold text-default">@Model.UserName</dd></div>
+                <div class="flex flex-col justify-between gap-3 rounded-2xl border border-brand-100 p-4 dark:border-brand-100/20"><div><dt class="text-xs font-black uppercase tracking-wider text-muted">Seguridad de la cuenta</dt><dd class="mt-2 font-semibold text-default">Protege el acceso cambiando tu clave.</dd></div><a asp-controller="Auth" asp-action="ChangePassword" class="text-sm font-black text-brand-700 hover:underline dark:text-brand-400">Cambiar contraseña →</a></div>
+            </dl>
+        </div>
+    </section>
+</div>

@@ -15,51 +15,38 @@
         : "<a href=\"/Property\" class=\"btn-primary\">Explorar propiedades</a>";
 }
 
-<div class="habita-page space-y-8">
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">
-                @(isAgent ? "Gestión de leads" : "Comunicación")
-            </p>
-            <h1 class="mt-2 text-3xl font-black tracking-tight text-default">@ViewData["Title"]</h1>
-            <p class="mt-2 text-sm text-muted">
-                @Model.Conversations.TotalCount @(Model.Conversations.TotalCount == 1 ? "conversación" : "conversaciones")
-                @(isAgent ? "con clientes interesados." : "con tus asesores inmobiliarios.")
-            </p>
-        </div>
-        @if (!isAgent)
-        {
-            <a asp-controller="Property" asp-action="Index" class="btn-primary">
-                Buscar propiedades
-            </a>
-        }
-    </header>
-
+<div class="habita-page space-y-7">
     @if (!ViewData.ModelState.IsValid)
     {
         <div asp-validation-summary="All" class="rounded-2xl border border-danger-500/30 bg-danger-50 p-4 text-sm font-semibold text-danger-700" role="alert"></div>
     }
 
-    @if (Model.Conversations.Items.Count == 0)
-    {
-        <div class="rounded-3xl border border-dashed border-default bg-[var(--color-bg-elevated)]">
-            <partial name="~/Views/Shared/Components/_EmptyState.cshtml"
-                     model='("messages-square", @emptyTitle, @emptyDesc, @emptyCta)' />
-        </div>
-    }
-    else
-    {
-        <div class="space-y-3" role="list" aria-label="Lista de conversaciones">
-            @foreach (var conversation in Model.Conversations.Items)
+    <section class="grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]" aria-label="Mensajería">
+        <aside class="flex flex-col justify-between rounded-3xl bg-brand-700 p-6 text-white dark:bg-[#10594f]">
+            <div><p class="text-xs font-black uppercase tracking-[.16em] text-white/75">@(isAgent ? "Relación con clientes" : "Comunicación")</p><h1 class="mt-3 text-3xl font-black tracking-tight">@(isAgent ? "Bandeja de mensajes" : "Mis conversaciones")</h1><p class="mt-3 text-sm leading-6 text-white/85">@(isAgent ? "Responde consultas y mantén el contacto con personas interesadas en tus propiedades." : "Continúa tus consultas con los agentes desde un solo espacio.")</p></div>
+            <div class="mt-8 border-t border-white/20 pt-5"><p class="text-xs font-black uppercase tracking-wider text-white/75">Conversaciones</p><p class="mt-1 text-4xl font-black">@Model.Conversations.TotalCount</p><p class="mt-1 text-sm text-white/80">@(isAgent ? "con clientes interesados" : "con tus asesores")</p></div>
+            @if (!isAgent)
             {
-                <partial name="_ConversationItem" model="conversation" />
+                <a asp-controller="Property" asp-action="Index" class="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-black text-brand-700 hover:bg-brand-50">Buscar propiedades</a>
             }
-        </div>
+        </aside>
 
-        <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel {
-            Action = nameof(MessageController.Index),
-            Controller = "Message",
-            CurrentPage = Model.Conversations.Page,
-            TotalPages = Model.Conversations.TotalPages }' />
-    }
+        <section class="min-w-0" aria-label="Lista de conversaciones">
+            <div class="mb-4 flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-black uppercase tracking-[.14em] text-brand-600">Bandeja</p><h2 class="mt-1 text-xl font-black text-default">@(isAgent ? "Consultas recientes" : "Tus mensajes")</h2></div><span class="text-sm text-muted">@Model.Conversations.TotalCount @(Model.Conversations.TotalCount == 1 ? "conversación" : "conversaciones")</span></div>
+            @if (Model.Conversations.Items.Count == 0)
+            {
+                <div class="rounded-3xl border border-dashed border-default bg-(--color-bg-elevated) p-5"><partial name="~/Views/Shared/Components/_EmptyState.cshtml" model='("messages-square", @emptyTitle, @emptyDesc, @emptyCta)' /></div>
+            }
+            else
+            {
+                <div class="overflow-hidden rounded-3xl border border-default bg-(--color-bg-elevated) divide-y divide-default" role="list">
+                    @foreach (var conversation in Model.Conversations.Items)
+                    {
+                        <div role="listitem"><partial name="_ConversationItem" model="conversation" /></div>
+                    }
+                </div>
+                <div class="mt-5"><partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel { Action = nameof(MessageController.Index), Controller = "Message", CurrentPage = Model.Conversations.Page, TotalPages = Model.Conversations.TotalPages }' /></div>
+            }
+        </section>
+    </section>
 </div>

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Hosting;
 using Habita.Application.Interfaces;
 using Habita.Application.Interfaces.Services;
 using Habita.Domain.Settings;
@@ -13,11 +14,20 @@ public class FileService : IFileService
 {
     private readonly FileSettings _settings;
     private readonly ILogger<FileService> _logger;
+    private readonly string _baseAbsolutePath;
 
-    public FileService(IOptions<FileSettings> options, ILogger<FileService> logger)
+    public FileService(
+        IOptions<FileSettings> options,
+        ILogger<FileService> logger,
+        IHostEnvironment environment
+    )
     {
         _settings = options.Value;
         _logger = logger;
+        var configuredBasePath = string.IsNullOrWhiteSpace(_settings.BasePath)
+            ? "wwwroot"
+            : _settings.BasePath;
+        _baseAbsolutePath = Path.GetFullPath(configuredBasePath, environment.ContentRootPath);
     }
 
                  
@@ -29,10 +39,15 @@ public class FileService : IFileService
             return string.Empty;
 
         string cleanRelativePath = relativePath.TrimStart('/', '\\');
-        string baseAbsolutePath = Path.GetFullPath(_settings.BasePath);
-        string combinedPath = Path.GetFullPath(Path.Combine(baseAbsolutePath, cleanRelativePath));
+        string combinedPath = Path.GetFullPath(Path.Combine(_baseAbsolutePath, cleanRelativePath));
+        string pathFromBase = Path.GetRelativePath(_baseAbsolutePath, combinedPath);
 
-        if (!combinedPath.StartsWith(baseAbsolutePath, StringComparison.OrdinalIgnoreCase))
+        if (
+            Path.IsPathRooted(pathFromBase)
+            || pathFromBase.Equals("..", StringComparison.Ordinal)
+            || pathFromBase.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+            || pathFromBase.StartsWith(".." + Path.AltDirectorySeparatorChar, StringComparison.Ordinal)
+        )
         {
             _logger.LogCritical(
                 "Intento de acceso ilegal fuera del directorio base (Path Traversal): {Path}",

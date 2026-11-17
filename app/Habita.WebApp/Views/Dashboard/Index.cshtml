@@ -7,99 +7,55 @@
     var totalDevelopers = Model.ActiveDevelopers + Model.InactiveDevelopers;
 }
 
-<div class="space-y-10">
-    <header>
-        <p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">Panel de control</p>
-        <h1 class="mt-2 text-3xl font-black tracking-tight text-default">Dashboard</h1>
-        <p class="mt-2 text-sm text-muted">Resumen general de la plataforma inmobiliaria.</p>
+<div class="space-y-7">
+    <header class="flex flex-col gap-5 border-b border-default pb-6 md:flex-row md:items-end md:justify-between">
+        <div>
+            <p class="text-xs font-black uppercase tracking-[.18em] text-brand-600">Habita / administración</p>
+            <h1 class="mt-2 text-3xl font-black tracking-tight text-default">Vista general</h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-muted">Actividad de propiedades y cuentas de la plataforma.</p>
+        </div>
+        <a asp-controller="User" asp-action="Agents" class="btn-primary">Revisar agentes</a>
     </header>
 
-    <section aria-labelledby="properties-heading">
-        <h2 id="properties-heading" class="mb-4 text-sm font-black uppercase tracking-[.12em] text-muted">Propiedades
-        </h2>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <partial name="~/Views/Shared/Components/_KpiCard.cshtml"
-                     model='("home", Model.AvailableProperties.ToString("N0"), "Disponibles", "#", "text-brand-600")' />
-            <partial name="~/Views/Shared/Components/_KpiCard.cshtml"
-                     model='("check-circle", Model.SoldProperties.ToString("N0"), "Vendidas", "#", "text-emerald-500")' />
+    <section class="grid gap-5 xl:grid-cols-3" aria-label="Resumen y accesos administrativos">
+        <div class="rounded-3xl border border-default bg-(--color-bg-elevated) p-5 sm:p-7 xl:col-span-2">
+            <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+                <div><p class="text-xs font-black uppercase tracking-[.14em] text-muted">Inventario</p><h2 class="mt-1 text-xl font-black text-default">Propiedades</h2></div>
+                <p class="text-sm text-muted">@totalProperties en total</p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <article class="rounded-2xl bg-brand-50 p-5 dark:bg-brand-100/10">
+                    <p class="text-xs font-bold uppercase tracking-wider text-brand-700 dark:text-brand-400">Disponibles</p>
+                    <p class="mt-3 text-4xl font-black text-brand-700 dark:text-brand-400">@Model.AvailableProperties.ToString("N0")</p>
+                    <div class="mt-4 h-2 overflow-hidden rounded-full bg-white/70 dark:bg-black/20"><div class="h-full rounded-full bg-brand-600" style="width:@(totalProperties == 0 ? 0 : (int)Math.Round((double)Model.AvailableProperties / totalProperties * 100))%"></div></div>
+                </article>
+                <article class="rounded-2xl bg-emerald-50 p-5 dark:bg-emerald-100/10">
+                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Vendidas</p>
+                    <p class="mt-3 text-4xl font-black text-emerald-700 dark:text-emerald-400">@Model.SoldProperties.ToString("N0")</p>
+                    <div class="mt-4 h-2 overflow-hidden rounded-full bg-white/70 dark:bg-black/20"><div class="h-full rounded-full bg-emerald-500" style="width:@(totalProperties == 0 ? 0 : (int)Math.Round((double)Model.SoldProperties / totalProperties * 100))%"></div></div>
+                </article>
+            </div>
         </div>
-        @if (totalProperties > 0)
-        {
-            <p class="mt-2 text-xs text-muted">@totalProperties propiedad@(totalProperties == 1 ? "" : "es") en total.</p>
-        }
+
+        <aside class="rounded-3xl bg-brand-900 p-6 text-white sm:p-7">
+            <p class="text-xs font-black uppercase tracking-[.16em] text-brand-200">Atajos</p>
+            <h2 class="mt-2 text-xl font-black">Administrar Habita</h2>
+            <p class="mt-2 text-sm leading-6 text-white/70">Accede directamente a cuentas y catálogos.</p>
+            <nav class="mt-6 grid gap-2" aria-label="Accesos rápidos">
+                <a asp-controller="User" asp-action="Agents" class="flex justify-between rounded-xl bg-white/10 px-4 py-3 text-sm font-bold transition hover:bg-white/20">Agentes <span aria-hidden="true">›</span></a>
+                <a asp-controller="User" asp-action="Admins" class="flex justify-between rounded-xl bg-white/10 px-4 py-3 text-sm font-bold transition hover:bg-white/20">Administradores <span aria-hidden="true">›</span></a>
+                <a asp-controller="User" asp-action="Developers" class="flex justify-between rounded-xl bg-white/10 px-4 py-3 text-sm font-bold transition hover:bg-white/20">Desarrolladores <span aria-hidden="true">›</span></a>
+                <a asp-controller="PropertyType" asp-action="Index" class="flex justify-between rounded-xl bg-white/10 px-4 py-3 text-sm font-bold transition hover:bg-white/20">Catálogos <span aria-hidden="true">›</span></a>
+            </nav>
+        </aside>
     </section>
 
-    <section aria-labelledby="agents-heading">
-        <h2 id="agents-heading" class="mb-4 text-sm font-black uppercase tracking-[.12em] text-muted">Agentes</h2>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <partial name="~/Views/Shared/Components/_KpiCard.cshtml"
-                     model='("users", Model.ActiveAgents.ToString("N0"), "Activos", "/User/Agents", "text-blue-500")' />
-            <partial name="~/Views/Shared/Components/_KpiCard.cshtml"
-                     model='("user-x", Model.InactiveAgents.ToString("N0"), "Inactivos", "/User/Agents", "text-amber-500")' />
+    <section aria-labelledby="accounts-heading">
+        <div class="mb-4 flex items-end justify-between gap-4"><div><p class="text-xs font-black uppercase tracking-[.14em] text-muted">Acceso y operación</p><h2 id="accounts-heading" class="mt-1 text-xl font-black text-default">Cuentas por rol</h2></div><a asp-controller="User" asp-action="Agents" class="text-sm font-bold text-brand-700 dark:text-brand-400">Ver usuarios</a></div>
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <a asp-controller="User" asp-action="Agents" class="rounded-2xl border border-default bg-(--color-bg-elevated) p-5 transition hover:border-brand-300"><div class="flex items-center justify-between"><span class="text-sm font-bold text-muted">Agentes</span><span class="text-xs font-bold text-muted">@totalAgents registrados</span></div><p class="mt-4 text-3xl font-black text-default">@Model.ActiveAgents <span class="text-sm font-semibold text-muted">activos</span></p><p class="mt-1 text-xs text-muted">@Model.InactiveAgents pendientes o inactivos</p></a>
+            <article class="rounded-2xl border border-default bg-(--color-bg-elevated) p-5"><div class="flex items-center justify-between"><span class="text-sm font-bold text-muted">Clientes</span><span class="text-xs font-bold text-muted">@totalClients registrados</span></div><p class="mt-4 text-3xl font-black text-default">@Model.ActiveClients <span class="text-sm font-semibold text-muted">activos</span></p><p class="mt-1 text-xs text-muted">@Model.InactiveClients inactivos</p></article>
+            <a asp-controller="User" asp-action="Developers" class="rounded-2xl border border-default bg-(--color-bg-elevated) p-5 transition hover:border-brand-300"><div class="flex items-center justify-between"><span class="text-sm font-bold text-muted">Desarrolladores</span><span class="text-xs font-bold text-muted">@totalDevelopers registrados</span></div><p class="mt-4 text-3xl font-black text-default">@Model.ActiveDevelopers <span class="text-sm font-semibold text-muted">activos</span></p><p class="mt-1 text-xs text-muted">@Model.InactiveDevelopers inactivos</p></a>
         </div>
-        @if (totalAgents > 0)
-        {
-            <p class="mt-2 text-xs text-muted">@totalAgents agente@(totalAgents == 1 ? "" : "s") registrado@(totalAgents ==
-                                                                                                                                            1 ? "" : "s").</p>
-            }
-        </section>
-
-        <section aria-labelledby="clients-heading">
-            <h2 id="clients-heading" class="mb-4 text-sm font-black uppercase tracking-[.12em] text-muted">Clientes</h2>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <partial name="~/Views/Shared/Components/_KpiCard.cshtml"
-                         model='("user-plus", Model.ActiveClients.ToString("N0"), "Activos", "#", "text-blue-500")' />
-                <partial name="~/Views/Shared/Components/_KpiCard.cshtml"
-                         model='("user-minus", Model.InactiveClients.ToString("N0"), "Inactivos", "#", "text-amber-500")' />
-            </div>
-            @if (totalClients > 0)
-            {
-                <p class="mt-2 text-xs text-muted">@totalClients cliente@(totalClients == 1 ? "" : "s") registrado@(totalClients
-                                                                                                                                                                            == 1 ? "" : "s").</p>
-                }
-            </section>
-
-            <section aria-labelledby="developers-heading">
-                <h2 id="developers-heading" class="mb-4 text-sm font-black uppercase tracking-[.12em] text-muted">
-                    Desarrolladores</h2>
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <partial name="~/Views/Shared/Components/_KpiCard.cshtml"
-                                 model='("code", Model.ActiveDevelopers.ToString("N0"), "Activos", "/User/Developers", "text-blue-500")' />
-                        <partial name="~/Views/Shared/Components/_KpiCard.cshtml"
-                                 model='("terminal", Model.InactiveDevelopers.ToString("N0"), "Inactivos", "/User/Developers", "text-amber-500")' />
-                    </div>
-                    @if (totalDevelopers > 0)
-                    {
-                        <p class="mt-2 text-xs text-muted">@totalDevelopers desarrollador@(totalDevelopers == 1 ? "" : "es")
-                            registrado@(totalDevelopers == 1 ? "" : "s").</p>
-                        }
-                    </section>
-
-                    <div class="flex flex-wrap gap-3 rounded-2xl border border-dashed border-default bg-(--color-bg-elevated) p-6">
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-100/15">
-                                <i data-lucide="link" class="h-5 w-5"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-default">Accesos r&aacute;pidos</p>
-                                <p class="mt-0.5 text-xs text-muted">Administra los recursos del sistema desde los siguientes enlaces.
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-2 w-full sm:w-auto sm:ml-auto sm:items-center">
-                            <a asp-controller="User" asp-action="Agents" class="btn-secondary text-sm min-h-10 px-4">
-                                Agentes
-                            </a>
-                            <a asp-controller="User" asp-action="Admins" class="btn-secondary text-sm min-h-10 px-4">
-                                Administradores
-                            </a>
-                            <a asp-controller="User" asp-action="Developers" class="btn-secondary text-sm min-h-10 px-4">
-                                Desarrolladores
-                            </a>
-                            <a asp-controller="PropertyType" asp-action="Index" class="btn-secondary text-sm min-h-10 px-4">
-                                Catálogos
-                            </a>
-                        </div>
-                    </div>
-                </div>
+    </section>
+</div>

@@ -1,111 +1,47 @@
 @model PropertyTypeListViewModel
 @{
-    ViewData["Title"] = "Tipos de Propiedad";
+    ViewData["Title"] = "Tipos de propiedad";
     var routeValues = new Dictionary<string, object?>();
     if (!string.IsNullOrWhiteSpace(Model.SearchTerm)) routeValues["searchTerm"] = Model.SearchTerm;
 }
 
-<div class="space-y-8">
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">Catálogos</p>
-            <h1 class="mt-2 text-3xl font-black tracking-tight text-default">Tipos de Propiedad</h1>
-            <p class="mt-2 text-sm text-muted">@Model.Items.TotalCount @(Model.Items.TotalCount == 1 ? "tipo registrado" : "tipos registrados") en el sistema.</p>
-        </div>
-        <a asp-action="Create" class="btn-primary">
-            Nuevo tipo
-        </a>
+<div class="space-y-7">
+    <header class="flex flex-wrap items-end justify-between gap-5 border-b border-default pb-6">
+        <div><p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">Catálogo / estructura</p><h1 class="mt-2 text-3xl font-black tracking-tight text-default">Tipos de propiedad</h1><p class="mt-2 text-sm text-muted">Clasifica los espacios que se publican en Habita.</p></div>
+        <div class="flex items-center gap-3"><span class="rounded-full bg-brand-50 px-3 py-2 text-sm font-bold text-brand-700 dark:bg-brand-100/10 dark:text-brand-400">@Model.Items.TotalCount tipos</span><a asp-action="Create" class="btn-primary">Crear tipo</a></div>
     </header>
-
-    <form method="get" asp-action="Index" class="flex items-center gap-3">
-        <div class="relative flex-1 max-w-md">
-            <i data-lucide="search" class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true"></i>
-            <input type="search" name="searchTerm" value="@Model.SearchTerm" placeholder="Buscar por nombre o descripci&oacute;n..."
-                   class="input-base pl-10"
-                   aria-label="Buscar tipos de propiedad" />
-        </div>
-        <button type="submit" class="btn-secondary px-4">
-            
-            <span class="hidden sm:inline">Buscar</span>
-        </button>
-        @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
-        {
-            <a asp-action="Index" class="btn-ghost px-3 text-sm">
-                Limpiar
-            </a>
-        }
-    </form>
-
-    @if (Model.Items.Items.Count == 0)
-    {
-        <div class="rounded-3xl border border-dashed border-default bg-[var(--color-bg-elevated)]">
-            <partial name="~/Views/Shared/Components/_EmptyState.cshtml"
-                     model='("tags", @ViewData["Title"] as string ?? "Tipos de Propiedad", "No se encontraron tipos de propiedad. Crea el primero para comenzar.", "<a href=\"/PropertyType/Create\" class=\"btn-primary\">Crear primer tipo</a>")' />
-        </div>
-    }
-    else
-    {
-        <div class="overflow-hidden rounded-2xl border border-default bg-[var(--color-bg-elevated)] shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm" role="table" aria-label="Listado de tipos de propiedad">
-                    <thead>
-                        <tr class="border-b border-default bg-[var(--color-bg-muted)]">
-                            <th scope="col" class="px-5 py-3.5 text-[11px] font-black uppercase tracking-[.12em] text-muted">Nombre</th>
-                            <th scope="col" class="hidden px-5 py-3.5 text-[11px] font-black uppercase tracking-[.12em] text-muted md:table-cell">Descripci&oacute;n</th>
-                            <th scope="col" class="px-5 py-3.5 text-center text-[11px] font-black uppercase tracking-[.12em] text-muted">Propiedades</th>
-                            <th scope="col" class="px-5 py-3.5 text-right text-[11px] font-black uppercase tracking-[.12em] text-muted">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-default">
-                        @foreach (var item in Model.Items.Items)
-                        {
-                            <tr class="group transition-colors hover:bg-brand-50/50 dark:hover:bg-brand-100/5">
-                                <td class="whitespace-nowrap px-5 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-100/20">
-                                            <i data-lucide="tag" class="h-4 w-4"></i>
-                                        </div>
-                                        <span class="font-bold text-default">@item.Name</span>
-                                    </div>
-                                </td>
-                                <td class="hidden max-w-xs truncate px-5 py-4 text-muted md:table-cell">@item.Description</td>
-                                <td class="whitespace-nowrap px-5 py-4 text-center">
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-muted)] px-2.5 py-1 text-xs font-bold text-muted">
-                                        <i data-lucide="building-2" class="h-3 w-3"></i>@item.PropertiesCount
-                                    </span>
-                                </td>
-                                <td class="whitespace-nowrap px-5 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="habita-text-control inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted transition-colors hover:bg-brand-50 hover:text-brand-600" title="Editar" aria-label="Editar @item.Name">Editar</a>
-                                        <form asp-action="Delete" method="post" class="contents"
-                                              data-confirm="¿Eliminar &quot;@item.Name&quot;?"
-                                              data-confirm-text="Esta acción no se puede deshacer.">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@item.Id" />
-                                            <input type="hidden" name="page" value="@Model.Items.Page" />
-                                            @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
-                                            {
-                                                <input type="hidden" name="searchTerm" value="@Model.SearchTerm" />
-                                            }
-                                            <button type="submit"
-                                                    class="habita-text-control inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted transition-colors hover:bg-danger-50 hover:text-danger-600"
-                                                    title="Eliminar"
-                                                    aria-label="Eliminar @item.Name">Eliminar</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel {
-            Action = nameof(PropertyTypeController.Index),
-            Controller = "PropertyType",
-            CurrentPage = Model.Items.Page,
-            TotalPages = Model.Items.TotalPages,
-            RouteValues = routeValues }' />
-    }
+    <div class="grid gap-7 xl:grid-cols-3">
+        <section class="xl:col-span-2" aria-label="Tipos registrados">
+            @if (Model.Items.Items.Count == 0)
+            {
+                <div class="rounded-3xl border border-dashed border-default bg-(--color-bg-elevated) p-6"><partial name="~/Views/Shared/Components/_EmptyState.cshtml" model='("tags", "Aún no hay tipos", "Registra un tipo para clasificar las propiedades.", "<a href=\"/PropertyType/Create\" class=\"btn-primary\">Crear tipo</a>")' /></div>
+            }
+            else
+            {
+                <div class="grid gap-4 md:grid-cols-2">
+                    @foreach (var item in Model.Items.Items)
+                    {
+                        <article class="relative overflow-hidden rounded-2xl border border-default bg-(--color-bg-elevated) p-5 shadow-sm">
+                            <div class="absolute right-0 top-0 h-20 w-20 rounded-bl-[3rem] bg-brand-50 dark:bg-brand-100/10"></div>
+                            <div class="relative flex h-full flex-col">
+                                <div class="flex items-start justify-between gap-3"><span class="rounded-lg bg-brand-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-brand-700 dark:bg-brand-100/10 dark:text-brand-400">Clasificación</span><span class="text-xs font-bold text-muted">ID @item.Id</span></div>
+                                <h2 class="mt-5 text-xl font-black text-default">@item.Name</h2>
+                                <p class="mt-2 min-h-12 text-sm leading-6 text-muted">@item.Description</p>
+                                <div class="mt-5 flex items-end justify-between border-t border-default pt-4">
+                                    <div><p class="text-2xl font-black text-default">@item.PropertiesCount</p><p class="text-xs font-semibold text-muted">propiedades asociadas</p></div>
+                                    <div class="flex gap-2"><a asp-action="Edit" asp-route-id="@item.Id" class="btn-secondary px-3 py-2 text-sm">Editar</a><form asp-action="Delete" method="post" data-confirm="¿Eliminar &quot;@item.Name&quot;?" data-confirm-text="Esta acción no se puede deshacer.">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="page" value="@Model.Items.Page" />@if (!string.IsNullOrWhiteSpace(Model.SearchTerm)){<input type="hidden" name="searchTerm" value="@Model.SearchTerm" />}<button type="submit" class="btn-ghost px-3 py-2 text-sm text-danger-600">Eliminar</button></form></div>
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+                <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel { Action = nameof(PropertyTypeController.Index), Controller = "PropertyType", CurrentPage = Model.Items.Page, TotalPages = Model.Items.TotalPages, RouteValues = routeValues }' />
+            }
+        </section>
+        <aside class="h-fit rounded-2xl bg-brand-950 p-5 text-white">
+            <p class="text-xs font-black uppercase tracking-[.15em] text-brand-200">Localizar</p><h2 class="mt-2 text-lg font-black">Busca en el catálogo</h2><p class="mt-2 text-sm leading-5 text-white/70">Filtra por nombre o descripción para encontrar una clasificación.</p>
+            <form method="get" asp-action="Index" class="mt-5 space-y-3"><label for="type-search" class="sr-only">Buscar tipo de propiedad</label><input id="type-search" type="search" name="searchTerm" value="@Model.SearchTerm" placeholder="Ej. apartamento" class="input-base w-full text-default" /><button type="submit" class="btn-primary w-full">Buscar tipos</button>@if (!string.IsNullOrWhiteSpace(Model.SearchTerm)){<a asp-action="Index" class="block py-1 text-center text-sm font-bold text-white/80">Quitar búsqueda</a>}</form>
+            <div class="mt-7 border-t border-white/15 pt-5"><p class="text-xs font-bold uppercase tracking-wider text-white/60">Total en catálogo</p><p class="mt-1 text-3xl font-black">@Model.Items.TotalCount</p></div>
+        </aside>
+    </div>
 </div>

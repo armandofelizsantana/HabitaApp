@@ -1,126 +1,39 @@
 @model SaleTypeListViewModel
 @{
-    ViewData["Title"] = "Tipos de Venta";
+    ViewData["Title"] = "Tipos de venta";
     var routeValues = new Dictionary<string, object?>();
     if (!string.IsNullOrWhiteSpace(Model.SearchTerm)) routeValues["searchTerm"] = Model.SearchTerm;
 }
 
-<div class="space-y-8">
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">Catálogos</p>
-            <h1 class="mt-2 text-3xl font-black tracking-tight text-default">Tipos de Venta</h1>
-            <p class="mt-2 text-sm text-muted">@Model.Items.TotalCount @(Model.Items.TotalCount == 1 ? "tipo registrado" : "tipos registrados") en el sistema.</p>
-        </div>
-        <a asp-action="Create" class="btn-primary">
-            Nuevo tipo
-        </a>
+<div class="space-y-7">
+    <header class="rounded-3xl border border-default bg-(--color-bg-elevated) p-6 sm:p-8">
+        <div class="flex flex-wrap items-end justify-between gap-5"><div><p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">Catálogo / operación</p><h1 class="mt-2 text-3xl font-black tracking-tight text-default">Modalidades de venta</h1><p class="mt-2 max-w-xl text-sm leading-6 text-muted">Define cómo se ofrece cada propiedad: venta, alquiler u otras condiciones.</p></div><a asp-action="Create" class="btn-primary">Añadir modalidad</a></div>
+        <div class="mt-7 grid gap-3 sm:grid-cols-3" aria-label="Total de modalidades registradas"><div class="border-l-4 border-brand-500 pl-4"><p class="text-2xl font-black text-default">@Model.Items.TotalCount</p><p class="text-xs font-bold uppercase tracking-wide text-muted">Modalidades</p></div><div class="border-l-4 border-emerald-500 pl-4"><p class="text-sm font-black text-default">Códigos únicos</p><p class="text-xs text-muted">Cada modalidad tiene una clave.</p></div><div class="border-l-4 border-amber-500 pl-4"><p class="text-sm font-black text-default">Reutilizables</p><p class="text-xs text-muted">Se seleccionan al publicar propiedades.</p></div></div>
     </header>
 
-    <form method="get" asp-action="Index" class="flex items-center gap-3">
-        <div class="relative flex-1 max-w-md">
-            <i data-lucide="search" class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true"></i>
-            <input type="search" name="searchTerm" value="@Model.SearchTerm" placeholder="Buscar por nombre o descripci&oacute;n..."
-                   class="input-base pl-10"
-                   aria-label="Buscar tipos de venta" />
-        </div>
-        <button type="submit" class="btn-secondary px-4">
-            
-            <span class="hidden sm:inline">Buscar</span>
-        </button>
-        @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
-        {
-            <a asp-action="Index" class="btn-ghost px-3 text-sm">
-                Limpiar
-            </a>
-        }
+    <form method="get" asp-action="Index" class="flex flex-col gap-3 rounded-2xl border border-default bg-(--color-bg-elevated) p-4 sm:flex-row sm:items-center">
+        <label for="sale-search" class="shrink-0 text-sm font-bold text-default">Filtrar modalidades</label><input id="sale-search" type="search" name="searchTerm" value="@Model.SearchTerm" placeholder="Nombre o descripción" class="input-base min-w-0 flex-1" /><button type="submit" class="btn-secondary">Buscar</button>@if (!string.IsNullOrWhiteSpace(Model.SearchTerm)){<a asp-action="Index" class="btn-ghost text-sm">Limpiar</a>}
     </form>
 
     @if (Model.Items.Items.Count == 0)
     {
-        <div class="rounded-3xl border border-dashed border-default bg-[var(--color-bg-elevated)]">
-            <partial name="~/Views/Shared/Components/_EmptyState.cshtml"
-                     model='("receipt", @ViewData["Title"] as string ?? "Tipos de Venta", "No se encontraron tipos de venta. Crea el primero para comenzar.", "<a href=\"/SaleType/Create\" class=\"btn-primary\">Crear primer tipo</a>")' />
-        </div>
+        <div class="rounded-3xl border border-dashed border-default bg-(--color-bg-elevated) p-6"><partial name="~/Views/Shared/Components/_EmptyState.cshtml" model='("receipt", "Sin modalidades", "No hay tipos de venta que coincidan con la búsqueda.", "<a href=\"/SaleType/Create\" class=\"btn-primary\">Añadir modalidad</a>")' /></div>
     }
     else
     {
-        <div class="overflow-hidden rounded-2xl border border-default bg-[var(--color-bg-elevated)] shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm" role="table" aria-label="Listado de tipos de venta">
-                    <thead>
-                        <tr class="border-b border-default bg-[var(--color-bg-muted)]">
-                            <th scope="col" class="px-5 py-3.5 text-[11px] font-black uppercase tracking-[.12em] text-muted">C&oacute;digo</th>
-                            <th scope="col" class="px-5 py-3.5 text-[11px] font-black uppercase tracking-[.12em] text-muted">Nombre</th>
-                            <th scope="col" class="hidden px-5 py-3.5 text-[11px] font-black uppercase tracking-[.12em] text-muted md:table-cell">Descripci&oacute;n</th>
-                            <th scope="col" class="px-5 py-3.5 text-center text-[11px] font-black uppercase tracking-[.12em] text-muted">Propiedades</th>
-                            <th scope="col" class="px-5 py-3.5 text-right text-[11px] font-black uppercase tracking-[.12em] text-muted">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-default">
-                        @foreach (var item in Model.Items.Items)
-                        {
-                            <tr class="group transition-colors hover:bg-brand-50/50 dark:hover:bg-brand-100/5">
-                                <td class="whitespace-nowrap px-5 py-4">
-                                    @{
-                                        var codeLabel = item.Code switch
-                                        {
-                                            "Sale" => "Venta",
-                                            "Rent" => "Alquiler",
-                                            "RentToOwn" => "Traspaso",
-                                            _ => item.Code
-                                        };
-                                        var codeColor = item.Code switch
-                                        {
-                                            "Sale" => "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
-                                            "Rent" => "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-                                            "RentToOwn" => "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-                                            _ => "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
-                                        };
-                                    }
-                                    <span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[.1em] @codeColor">@codeLabel</span>
-                                </td>
-                                <td class="whitespace-nowrap px-5 py-4">
-                                    <span class="font-bold text-default">@item.Name</span>
-                                </td>
-                                <td class="hidden max-w-xs truncate px-5 py-4 text-muted md:table-cell">@item.Description</td>
-                                <td class="whitespace-nowrap px-5 py-4 text-center">
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-muted)] px-2.5 py-1 text-xs font-bold text-muted">
-                                        <i data-lucide="building-2" class="h-3 w-3"></i>@item.PropertiesCount
-                                    </span>
-                                </td>
-                                <td class="whitespace-nowrap px-5 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="habita-text-control inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted transition-colors hover:bg-brand-50 hover:text-brand-600" title="Editar" aria-label="Editar @item.Name">Editar</a>
-                                        <form asp-action="Delete" method="post" class="contents"
-                                              data-confirm="¿Eliminar &quot;@item.Name&quot;?"
-                                              data-confirm-text="Esta acción no se puede deshacer.">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@item.Id" />
-                                            <input type="hidden" name="page" value="@Model.Items.Page" />
-                                            @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
-                                            {
-                                                <input type="hidden" name="searchTerm" value="@Model.SearchTerm" />
-                                            }
-                                            <button type="submit"
-                                                    class="habita-text-control inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted transition-colors hover:bg-danger-50 hover:text-danger-600"
-                                                    title="Eliminar"
-                                                    aria-label="Eliminar @item.Name">Eliminar</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel {
-            Action = nameof(SaleTypeController.Index),
-            Controller = "SaleType",
-            CurrentPage = Model.Items.Page,
-            TotalPages = Model.Items.TotalPages,
-            RouteValues = routeValues }' />
+        <section class="space-y-3" aria-label="Modalidades registradas">
+            @foreach (var item in Model.Items.Items)
+            {
+                var codeStyle = item.Code switch { "Sale" => "border-emerald-300 bg-emerald-50 text-emerald-800 dark:bg-emerald-100/10 dark:text-emerald-300", "Rent" => "border-sky-300 bg-sky-50 text-sky-800 dark:bg-sky-100/10 dark:text-sky-300", "RentToOwn" => "border-amber-300 bg-amber-50 text-amber-800 dark:bg-amber-100/10 dark:text-amber-300", _ => "border-default bg-(--color-bg-muted) text-default" };
+                var codeLabel = item.Code switch { "Sale" => "Venta", "Rent" => "Alquiler", "RentToOwn" => "Traspaso", _ => item.Code };
+                <article class="grid gap-4 rounded-2xl border border-default bg-(--color-bg-elevated) p-5 sm:grid-cols-4 sm:items-center">
+                    <div class="rounded-xl border px-3 py-3 text-center @codeStyle"><p class="text-[10px] font-black uppercase tracking-[.12em]">Código</p><p class="mt-1 break-words text-sm font-black">@codeLabel</p></div>
+                    <div><h2 class="text-lg font-black text-default">@item.Name</h2><p class="mt-1 text-sm leading-5 text-muted">@item.Description</p></div>
+                    <div class="sm:border-l sm:border-default sm:pl-5"><p class="text-2xl font-black text-default">@item.PropertiesCount</p><p class="text-xs font-bold uppercase tracking-wide text-muted">propiedades</p></div>
+                    <div class="flex gap-2 sm:justify-end"><a asp-action="Edit" asp-route-id="@item.Id" class="btn-secondary px-3 py-2 text-sm">Editar</a><form asp-action="Delete" method="post" data-confirm="¿Eliminar &quot;@item.Name&quot;?" data-confirm-text="Esta acción no se puede deshacer.">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="page" value="@Model.Items.Page" />@if (!string.IsNullOrWhiteSpace(Model.SearchTerm)){<input type="hidden" name="searchTerm" value="@Model.SearchTerm" />}<button type="submit" class="btn-ghost px-3 py-2 text-sm text-danger-600">Eliminar</button></form></div>
+                </article>
+            }
+        </section>
+        <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel { Action = nameof(SaleTypeController.Index), Controller = "SaleType", CurrentPage = Model.Items.Page, TotalPages = Model.Items.TotalPages, RouteValues = routeValues }' />
     }
 </div>

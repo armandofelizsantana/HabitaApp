@@ -5,107 +5,37 @@
     if (!string.IsNullOrWhiteSpace(Model.SearchTerm)) routeValues["searchTerm"] = Model.SearchTerm;
 }
 
-<div class="space-y-8">
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">Catálogos</p>
-            <h1 class="mt-2 text-3xl font-black tracking-tight text-default">Características</h1>
-            <p class="mt-2 text-sm text-muted">@Model.Items.TotalCount @(Model.Items.TotalCount == 1 ? "mejora registrada" : "mejoras registradas") en el sistema.</p>
-        </div>
-        <a asp-action="Create" class="btn-primary">
-            Nueva mejora
-        </a>
+<div class="space-y-7">
+    <header class="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div><p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">Biblioteca de atributos</p><h1 class="mt-2 text-3xl font-black tracking-tight text-default">Características</h1><p class="mt-2 max-w-2xl text-sm leading-6 text-muted">Administra los detalles que ayudan a describir y comparar cada propiedad.</p></div>
+        <div class="flex items-center gap-3"><div class="rounded-xl border border-default bg-(--color-bg-elevated) px-4 py-2"><p class="text-xl font-black text-default">@Model.Items.TotalCount</p><p class="text-[10px] font-bold uppercase tracking-wide text-muted">registradas</p></div><a asp-action="Create" class="btn-primary">Nueva característica</a></div>
     </header>
 
-    <form method="get" asp-action="Index" class="flex items-center gap-3">
-        <div class="relative flex-1 max-w-md">
-            <i data-lucide="search" class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true"></i>
-            <input type="search" name="searchTerm" value="@Model.SearchTerm" placeholder="Buscar por nombre o descripci&oacute;n..."
-                   class="input-base pl-10"
-                   aria-label="Buscar mejoras" />
-        </div>
-        <button type="submit" class="btn-secondary px-4">
-            
-            <span class="hidden sm:inline">Buscar</span>
-        </button>
-        @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
-        {
-            <a asp-action="Index" class="btn-ghost px-3 text-sm">
-                Limpiar
-            </a>
-        }
-    </form>
-
-    @if (Model.Items.Items.Count == 0)
-    {
-        <div class="rounded-3xl border border-dashed border-default bg-[var(--color-bg-elevated)]">
-            <partial name="~/Views/Shared/Components/_EmptyState.cshtml"
-                     model='("zap", @ViewData["Title"] as string ?? "Características", "No se encontraron mejoras. Crea la primera para comenzar.", "<a href=\"/Improvement/Create\" class=\"btn-primary\">Crear primera mejora</a>")' />
-        </div>
-    }
-    else
-    {
-        <div class="overflow-hidden rounded-2xl border border-default bg-[var(--color-bg-elevated)] shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm" role="table" aria-label="Listado de mejoras">
-                    <thead>
-                        <tr class="border-b border-default bg-[var(--color-bg-muted)]">
-                            <th scope="col" class="px-5 py-3.5 text-[11px] font-black uppercase tracking-[.12em] text-muted">Nombre</th>
-                            <th scope="col" class="hidden px-5 py-3.5 text-[11px] font-black uppercase tracking-[.12em] text-muted md:table-cell">Descripci&oacute;n</th>
-                            <th scope="col" class="px-5 py-3.5 text-center text-[11px] font-black uppercase tracking-[.12em] text-muted">Propiedades</th>
-                            <th scope="col" class="px-5 py-3.5 text-right text-[11px] font-black uppercase tracking-[.12em] text-muted">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-default">
-                        @foreach (var item in Model.Items.Items)
-                        {
-                            <tr class="group transition-colors hover:bg-brand-50/50 dark:hover:bg-brand-100/5">
-                                <td class="whitespace-nowrap px-5 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-100/20">
-                                            <i data-lucide="zap" class="h-4 w-4"></i>
-                                        </div>
-                                        <span class="font-bold text-default">@item.Name</span>
-                                    </div>
-                                </td>
-                                <td class="hidden max-w-xs truncate px-5 py-4 text-muted md:table-cell">@item.Description</td>
-                                <td class="whitespace-nowrap px-5 py-4 text-center">
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-muted)] px-2.5 py-1 text-xs font-bold text-muted">
-                                        <i data-lucide="building-2" class="h-3 w-3"></i>@item.PropertiesCount
-                                    </span>
-                                </td>
-                                <td class="whitespace-nowrap px-5 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="habita-text-control inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted transition-colors hover:bg-brand-50 hover:text-brand-600" title="Editar" aria-label="Editar @item.Name">Editar</a>
-                                        <form asp-action="Delete" method="post" class="contents"
-                                              data-confirm="¿Eliminar &quot;@item.Name&quot;?"
-                                              data-confirm-text="Esta acción no se puede deshacer.">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@item.Id" />
-                                            <input type="hidden" name="page" value="@Model.Items.Page" />
-                                            @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
-                                            {
-                                                <input type="hidden" name="searchTerm" value="@Model.SearchTerm" />
-                                            }
-                                            <button type="submit"
-                                                    class="habita-text-control inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted transition-colors hover:bg-danger-50 hover:text-danger-600"
-                                                    title="Eliminar"
-                                                    aria-label="Eliminar @item.Name">Eliminar</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel {
-            Action = nameof(ImprovementController.Index),
-            Controller = "Improvement",
-            CurrentPage = Model.Items.Page,
-            TotalPages = Model.Items.TotalPages,
-            RouteValues = routeValues }' />
-    }
+    <div class="grid gap-6 xl:grid-cols-[15rem_minmax(0,1fr)]">
+        <aside class="h-fit rounded-2xl border border-default bg-(--color-bg-elevated) p-5">
+            <p class="text-xs font-black uppercase tracking-[.13em] text-muted">Buscar en biblioteca</p><p class="mt-2 text-sm leading-5 text-muted">Usa un término del nombre o de la descripción.</p>
+            <form method="get" asp-action="Index" class="mt-4 space-y-3"><label for="improvement-search" class="sr-only">Buscar características</label><input id="improvement-search" type="search" name="searchTerm" value="@Model.SearchTerm" placeholder="Ej. terraza" class="input-base w-full" /><button type="submit" class="btn-secondary w-full">Buscar</button>@if (!string.IsNullOrWhiteSpace(Model.SearchTerm)){<a asp-action="Index" class="block text-center text-sm font-bold text-brand-700 dark:text-brand-400">Mostrar todo</a>}</form>
+            <div class="mt-6 border-t border-default pt-4"><p class="text-xs font-bold uppercase tracking-wide text-muted">Uso</p><p class="mt-2 text-sm text-default">Los recuentos indican en cuántas propiedades aparece cada característica.</p></div>
+        </aside>
+        <section aria-label="Características registradas">
+            @if (Model.Items.Items.Count == 0)
+            {
+                <div class="rounded-3xl border border-dashed border-default bg-(--color-bg-elevated) p-6"><partial name="~/Views/Shared/Components/_EmptyState.cshtml" model='("sparkles", "No hay características", "Agrega la primera característica o cambia la búsqueda.", "<a href=\"/Improvement/Create\" class=\"btn-primary\">Crear característica</a>")' /></div>
+            }
+            else
+            {
+                <div class="grid gap-3 md:grid-cols-2">
+                    @foreach (var item in Model.Items.Items)
+                    {
+                        <article class="flex min-h-40 flex-col justify-between rounded-2xl border border-default bg-(--color-bg-elevated) p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+                            <div class="flex items-start justify-between gap-3"><span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-900 dark:bg-amber-100/10 dark:text-amber-300">@(item.PropertiesCount == 0 ? "Sin asignar" : "En catálogo")</span><span class="text-xs font-bold text-muted">@item.PropertiesCount uso@(item.PropertiesCount == 1 ? "" : "s")</span></div>
+                            <div class="mt-5"><h2 class="text-lg font-black text-default">@item.Name</h2><p class="mt-1 text-sm leading-5 text-muted">@item.Description</p></div>
+                            <div class="mt-5 flex justify-end gap-2 border-t border-default pt-3"><a asp-action="Edit" asp-route-id="@item.Id" class="btn-secondary px-3 py-2 text-sm">Editar</a><form asp-action="Delete" method="post" data-confirm="¿Eliminar &quot;@item.Name&quot;?" data-confirm-text="Se quitará de las propiedades asociadas.">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="page" value="@Model.Items.Page" />@if (!string.IsNullOrWhiteSpace(Model.SearchTerm)){<input type="hidden" name="searchTerm" value="@Model.SearchTerm" />}<button type="submit" class="btn-ghost px-3 py-2 text-sm text-danger-600">Eliminar</button></form></div>
+                        </article>
+                    }
+                </div>
+                <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel { Action = nameof(ImprovementController.Index), Controller = "Improvement", CurrentPage = Model.Items.Page, TotalPages = Model.Items.TotalPages, RouteValues = routeValues }' />
+            }
+        </section>
+    </div>
 </div>

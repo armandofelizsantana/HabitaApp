@@ -27,6 +27,9 @@
               : form.checkValidity();
           if (!validity) {
             event.preventDefault();
+            if (typeof form._showRegisterAlert === "function") {
+              form._showRegisterAlert();
+            }
             return;
           }
           var button = form.querySelector('button[type="submit"]');
@@ -213,33 +216,94 @@
     var next = form.querySelector("[data-step-next]");
     var submit = form.querySelector("[data-step-submit]");
     var counter = document.getElementById("step-counter");
+    var registerAlert = form.querySelector("[data-register-alert]");
     var current = Math.min(
       Math.max(Number(form.dataset.initialStep) || 1, 1),
       panels.length,
     );
 
-    function firstInvalid(panel) {
+    function invalidFields(panel) {
       var fields = Array.from(
         panel.querySelectorAll("input, select, textarea"),
       ).filter(function (field) {
         return field.type !== "hidden" && field.name !== "Website";
       });
-      var invalid;
-      fields.forEach(function (field) {
+      return fields.filter(function (field) {
         var isValid =
           window.jQuery && window.jQuery.validator
             ? window.jQuery(field).valid()
             : field.checkValidity();
-        if (!isValid && !invalid) invalid = field;
+        return !isValid;
       });
-      return invalid;
     }
 
+    function hideRegisterAlert() {
+      if (!registerAlert) return;
+      registerAlert.classList.add("hidden");
+      registerAlert.replaceChildren();
+    }
+
+    function showRegisterAlert(fields) {
+      if (!registerAlert) return;
+      var invalid = fields || invalidFields(panels[current - 1]);
+      registerAlert.replaceChildren();
+
+      var heading = document.createElement("p");
+      heading.className = "font-bold";
+      heading.textContent = invalid.length === 1
+        ? "Corrige este campo para continuar:"
+        : "Corrige estos campos para continuar:";
+      registerAlert.appendChild(heading);
+
+      var list = document.createElement("ul");
+      list.className = "mt-2 list-disc space-y-1 pl-5";
+      var seen = new Set();
+      invalid.forEach(function (field) {
+        if (seen.has(field.name)) return;
+        seen.add(field.name);
+
+        var title;
+        if (field.type === "radio") {
+          var fieldset = field.closest("fieldset");
+          var legend = fieldset && fieldset.querySelector("legend");
+          title = legend ? legend.textContent.trim() : field.name;
+        } else {
+          var label = Array.from(form.querySelectorAll("label[for]")).find(
+            function (candidate) { return candidate.htmlFor === field.id; },
+          );
+          title = label ? label.textContent.trim() : field.name;
+        }
+
+        var validationMessage = Array.from(
+          form.querySelectorAll("[data-valmsg-for]"),
+        ).find(function (message) {
+          return message.dataset.valmsgFor === field.name;
+        });
+        var detail = validationMessage && validationMessage.textContent.trim();
+        if (!detail && field.validity && !field.validity.valid) {
+          detail = field.validationMessage;
+        }
+
+        var item = document.createElement("li");
+        item.textContent = detail ? title + ": " + detail : title;
+        list.appendChild(item);
+      });
+
+      registerAlert.appendChild(list);
+      registerAlert.classList.remove("hidden");
+      registerAlert.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
+    }
+
+    form._showRegisterAlert = showRegisterAlert;
+
     function validateCurrent() {
-      var invalid = firstInvalid(panels[current - 1]);
-      if (!invalid) return true;
-      invalid.focus({ preventScroll: true });
-      invalid.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
+      var invalid = invalidFields(panels[current - 1]);
+      if (invalid.length === 0) {
+        hideRegisterAlert();
+        return true;
+      }
+      showRegisterAlert(invalid);
+      invalid[0].focus({ preventScroll: true });
       return false;
     }
 

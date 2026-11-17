@@ -38,7 +38,7 @@
                 <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel { Action = nameof(PropertyTypeController.Index), Controller = "PropertyType", CurrentPage = Model.Items.Page, TotalPages = Model.Items.TotalPages, RouteValues = routeValues }' />
             }
         </section>
-        <aside class="h-fit rounded-2xl bg-brand-950 p-5 text-white">
+        <aside class="h-fit rounded-2xl bg-brand-700 p-5 text-white dark:bg-[#10594f]">
             <p class="text-xs font-black uppercase tracking-[.15em] text-brand-200">Localizar</p><h2 class="mt-2 text-lg font-black">Busca en el catálogo</h2><p class="mt-2 text-sm leading-5 text-white/70">Filtra por nombre o descripción para encontrar una clasificación.</p>
             <form method="get" asp-action="Index" class="mt-5 space-y-3"><label for="type-search" class="sr-only">Buscar tipo de propiedad</label><input id="type-search" type="search" name="searchTerm" value="@Model.SearchTerm" placeholder="Ej. apartamento" class="input-base w-full text-default" /><button type="submit" class="btn-primary w-full">Buscar tipos</button>@if (!string.IsNullOrWhiteSpace(Model.SearchTerm)){<a asp-action="Index" class="block py-1 text-center text-sm font-bold text-white/80">Quitar búsqueda</a>}</form>
             <div class="mt-7 border-t border-white/15 pt-5"><p class="text-xs font-bold uppercase tracking-wider text-white/60">Total en catálogo</p><p class="mt-1 text-3xl font-black">@Model.Items.TotalCount</p></div>

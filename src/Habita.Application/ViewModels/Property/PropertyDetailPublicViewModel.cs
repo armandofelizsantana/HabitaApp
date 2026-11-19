@@ -1,4 +1,5 @@
 using Habita.Application.Dtos.Property.Responses;
+using Habita.Domain.Common;
 
 namespace Habita.Application.ViewModels.Property;
 
@@ -30,5 +31,9 @@ public sealed class PropertyDetailPublicViewModel : BaseViewModel
     public IReadOnlyList<PropertyImprovementDto> Improvements { get; init; } = [];
     public bool IsFavorite { get; init; }
     public IReadOnlyList<Offers.OfferListItemViewModel> Offers { get; set; } = [];
+    public PagedResult<Chat.ConversationSummaryViewModel> AgentConversations { get; set; } =
+        new([], 0, 1, 8);
+    public PagedResult<Offers.OfferClientSummaryViewModel> AgentOfferClients { get; set; } =
+        new([], 0, 1, 8);
     public bool HasPendingOffer => Offers.Any(offer => offer.IsPending);
 }

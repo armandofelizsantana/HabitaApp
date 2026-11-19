@@ -55,26 +55,28 @@ public sealed class GetAgentPropertiesUseCase : IGetAgentPropertiesUseCase
                 Error.Forbidden("Auth.AgentOnly", "Solo los agentes pueden ver sus propiedades.")
             );
 
+        Expression<Func<PropertyEntity, bool>> filter = request.Status.HasValue
+            ? p => p.AgentId == _currentUser.UserId && p.Status == request.Status.Value
+            : p => p.AgentId == _currentUser.UserId;
+
+        if (request.Filters is not null)
+            filter = request.Filters.Within(filter, p => p);
+
         var options = new QueryOptions<PropertyEntity>
         {
+            Filter = filter,
             Includes = [p => p.Images, p => p.PropertyType!, p => p.SaleType!],
             OrderBy = q => q.OrderByDescending(p => p.CreatedAt),
             Skip = (request.Page - 1) * request.PageSize,
             Take = request.PageSize,
         };
 
-        var properties = await _propertyRepository.GetByAgentAsync(
-            _currentUser.UserId,
-            request.Status,
+        var properties = await _propertyRepository.GetAllAsync(
             options,
             cancellationToken
         );
 
-        Expression<Func<PropertyEntity, bool>> countFilter = request.Status.HasValue
-            ? p => p.AgentId == _currentUser.UserId && p.Status == request.Status.Value
-            : p => p.AgentId == _currentUser.UserId;
-
-        var totalCount = await _propertyRepository.CountAsync(countFilter, cancellationToken);
+        var totalCount = await _propertyRepository.CountAsync(filter, cancellationToken);
         var items = _mapper.Map<List<PropertySummaryResponse>>(properties);
 
         return Result<PagedResult<PropertySummaryResponse>>.Success(

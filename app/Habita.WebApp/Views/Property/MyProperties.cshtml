@@ -6,7 +6,7 @@
 <div class="habita-page space-y-7">
     <header class="flex flex-col gap-5 border-b border-default pb-6 md:flex-row md:items-end md:justify-between">
         <div><p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">Inventario del agente</p><h1 class="mt-2 text-3xl font-black tracking-tight text-default">Mis propiedades</h1><p class="mt-2 max-w-xl text-sm leading-6 text-muted">Consulta publicaciones, atiende ofertas y mantén los datos de cada inmueble actualizados.</p></div>
-        <div class="flex items-center gap-3"><span class="rounded-xl bg-brand-50 px-4 py-3 text-sm font-black text-brand-700 dark:bg-brand-100/10 dark:text-brand-400">@Model.Properties.TotalCount activas</span><a asp-action="Create" class="btn-primary">Crear propiedad</a></div>
+        <div class="flex flex-wrap items-center gap-3"><span class="rounded-xl bg-brand-50 px-4 py-3 text-sm font-black text-brand-700 dark:bg-brand-100/10 dark:text-brand-400">@Model.Properties.TotalCount disponibles</span><span class="rounded-xl bg-danger-50 px-4 py-3 text-sm font-black text-danger-700">@Model.SoldPropertiesCount vendidas</span><a asp-action="Create" class="btn-primary">Crear propiedad</a></div>
     </header>
 
     @if (!ViewData.ModelState.IsValid)
@@ -14,7 +14,12 @@
         <div asp-validation-summary="All" class="rounded-2xl border border-danger-500/30 bg-danger-50 p-4 text-sm font-semibold text-danger-700" role="alert"></div>
     }
 
-    @if (Model.Properties.Items.Count == 0)
+    <partial name="~/Views/Home/_PropertyFilterPanel.cshtml" model="Model.Filters" />
+    @if (!ViewData.ModelState.IsValid || (Model.Filters.HasCriteria && Model.Properties.Items.Count == 0))
+    {
+        <p class="text-sm text-muted">No se encontraron propiedades con los filtros indicados.</p>
+    }
+    else if (Model.Properties.Items.Count == 0)
     {
         <div class="rounded-3xl border border-dashed border-default bg-(--color-bg-elevated) p-6">
             <partial name="~/Views/Shared/Components/_EmptyState.cshtml" model='("building-2", "Aún no tienes propiedades disponibles", "Publica tu primer inmueble para comenzar a construir tu inventario inmobiliario.", "<a href=\"/Property/Create\" class=\"btn-primary\">Crear propiedad</a>")' />
@@ -28,7 +33,7 @@
                 @foreach (var property in Model.Properties.Items)
                 {
                     <article class="grid gap-4 p-4 sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:items-center sm:p-5" role="listitem">
-                        <a asp-action="Edit" asp-route-id="@property.Id" class="relative h-24 overflow-hidden rounded-2xl bg-brand-50 dark:bg-brand-100/20">
+                        <a asp-action="Detail" asp-route-id="@property.Id" class="relative h-24 overflow-hidden rounded-2xl bg-brand-50 dark:bg-brand-100/20" aria-label="Ver detalle de @property.Title">
                             @if (!string.IsNullOrWhiteSpace(property.MainImageUrl))
                             {
                                 <img src="@property.MainImageUrl" alt="@property.Title" class="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" />
@@ -45,7 +50,8 @@
                             <p class="mt-2 font-black text-brand-700">@PriceHelper.FormatCompact(property.Price, property.Currency)</p>
                         </div>
                         <div class="flex flex-wrap gap-2 sm:justify-end">
-                            <a asp-controller="Offer" asp-action="PropertyOffers" asp-route-propertyId="@property.Id" class="btn-primary">Ofertas</a>
+                            <a asp-action="Detail" asp-route-id="@property.Id" class="btn-primary">Ver detalle</a>
+                            <a asp-controller="Offer" asp-action="PropertyOffers" asp-route-propertyId="@property.Id" class="btn-secondary">Ofertas</a>
                             <a asp-action="Edit" asp-route-id="@property.Id" class="btn-secondary">Editar</a>
                             <a asp-action="Delete" asp-route-id="@property.Id" class="btn-danger">Eliminar</a>
                         </div>
@@ -53,6 +59,37 @@
                 }
             </div>
         </section>
-        <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel { Action = nameof(PropertyController.MyProperties), Controller = "Property", CurrentPage = Model.Properties.Page, TotalPages = Model.Properties.TotalPages }' />
+        <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel { Action = nameof(PropertyController.MyProperties), Controller = "Property", CurrentPage = Model.Properties.Page, TotalPages = Model.Properties.TotalPages, RouteValues = Model.Filters.RouteValues() }' />
+    }
+
+    @if (Model.SoldProperties.Count > 0)
+    {
+        <section class="space-y-4 border-t border-default pt-7" aria-labelledby="sold-properties-title">
+            <header class="flex flex-wrap items-end justify-between gap-3">
+                <div><p class="text-xs font-black uppercase tracking-[.14em] text-muted">Historial del agente</p><h2 id="sold-properties-title" class="mt-1 text-2xl font-black text-default">Propiedades vendidas</h2><p class="mt-1 text-sm text-muted">Consulta los detalles y las conversaciones de operaciones cerradas.</p></div>
+                <span class="badge-danger">@Model.SoldPropertiesCount vendidas</span>
+            </header>
+            <div class="grid gap-4 md:grid-cols-2" role="list" aria-label="Propiedades vendidas del agente">
+                @foreach (var property in Model.SoldProperties)
+                {
+                    <article class="grid overflow-hidden rounded-3xl border border-default bg-(--color-bg-elevated) sm:grid-cols-[10rem_minmax(0,1fr)]" role="listitem">
+                        <a asp-action="Detail" asp-route-id="@property.Id" class="relative min-h-36 bg-brand-50 dark:bg-brand-100/20" aria-label="Ver detalle de @property.Title">
+                            @if (!string.IsNullOrWhiteSpace(property.MainImageUrl))
+                            {
+                                <img src="@property.MainImageUrl" alt="@property.Title" class="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" />
+                            }
+                            else
+                            {
+                                <span class="flex h-full min-h-36 items-center justify-center text-brand-600">Sin imagen</span>
+                            }
+                        </a>
+                        <div class="flex flex-col justify-between gap-4 p-5">
+                            <div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><span class="badge-danger">Vendida</span><span class="font-mono text-xs font-bold text-muted">@property.Code</span></div><h3 class="mt-2 line-clamp-2 text-lg font-black text-default">@property.Title</h3><p class="mt-1 text-sm text-muted">@property.SaleTypeName · @property.Bedrooms hab. · @property.Bathrooms baños · @PriceHelper.FormatArea(property.SizeM2)</p><p class="mt-2 font-black text-brand-700">@PriceHelper.FormatCompact(property.Price, property.Currency)</p></div>
+                            <div class="flex flex-wrap gap-2"><a asp-action="Detail" asp-route-id="@property.Id" class="btn-primary">Ver detalle</a><a asp-controller="Offer" asp-action="PropertyOffers" asp-route-propertyId="@property.Id" class="btn-secondary">Historial de ofertas</a></div>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
     }
 </div>

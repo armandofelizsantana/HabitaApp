@@ -36,7 +36,7 @@ public sealed class UserController : BaseController
     }
 
     [HttpGet]
-    public IActionResult Index() => RedirectToAction(nameof(Agents));
+    public IActionResult Index() => RedirectToAction(nameof(Clients));
 
     private Task PopulateAsync(BaseViewModel vm, CancellationToken ct) =>
         this.PopulateBaseViewModelAsync(vm, _viewModelBuilder, ct);
@@ -72,6 +72,54 @@ public sealed class UserController : BaseController
         return View(viewModel);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Clients(
+        string? searchTerm = null,
+        int page = 1,
+        CancellationToken ct = default
+    )
+    {
+        page = Math.Max(1, page);
+        var result = await _adminService.GetClientsAsync(
+            new GetClientsListRequest(searchTerm?.Trim(), page, PageSize),
+            ct
+        );
+
+        if (result.IsSuccess && result.GetValue().TotalPages > 0 && page > result.GetValue().TotalPages)
+            return RedirectToAction(nameof(Clients), new { searchTerm, page = result.GetValue().TotalPages });
+
+        var items = result.IsSuccess
+            ? new PagedResult<ClientListItemViewModel>(
+                result.GetValue().Items.Select(client => new ClientListItemViewModel
+                    {
+                        Id = client.Id,
+                        FirstName = client.FirstName,
+                        LastName = client.LastName,
+                        Email = client.Email,
+                        UserName = client.UserName,
+                        Phone = client.Phone,
+                        IsActive = client.IsActive,
+                    })
+                    .ToList()
+                    .AsReadOnly(),
+                result.GetValue().TotalCount,
+                result.GetValue().Page,
+                result.GetValue().PageSize
+            )
+            : new PagedResult<ClientListItemViewModel>([], 0, page, PageSize);
+
+        if (result.IsFailure)
+            this.SetErrorMessage(result.GetError().Message);
+
+        var viewModel = new ClientListViewModel
+        {
+            Items = items,
+            SearchTerm = searchTerm?.Trim(),
+        };
+        await PopulateAsync(viewModel, ct);
+        return View(viewModel);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleAgentStatus(
@@ -85,9 +133,33 @@ public sealed class UserController : BaseController
         if (result.IsFailure)
             this.SetErrorMessage(result.GetError().Message);
         else
-            this.SetSuccessMessage("Estado del agente actualizado correctamente.");
+        {
+            var agentResult = await _adminService.GetAgentByIdAsync(id, ct);
+            if (agentResult.IsSuccess && agentResult.GetValue().IsActive)
+                this.SetSuccessMessage("Agente activado. El servidor SMTP aceptó el aviso; revisa Recibidos, Spam y Promociones.");
+            else
+                this.SetSuccessMessage("Agente desactivado correctamente.");
+        }
 
         return RedirectToAction(nameof(Agents), new { searchTerm, page });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleClientStatus(
+        string id,
+        string? searchTerm = null,
+        int page = 1,
+        CancellationToken ct = default
+    )
+    {
+        var result = await _adminService.ToggleClientStatusAsync(id, ct);
+        if (result.IsFailure)
+            this.SetErrorMessage(result.GetError().Message);
+        else
+            this.SetSuccessMessage("Estado del cliente actualizado correctamente.");
+
+        return RedirectToAction(nameof(Clients), new { searchTerm, page });
     }
 
     [HttpPost]

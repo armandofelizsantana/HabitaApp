@@ -1,15 +1,7 @@
 @model HomeIndexViewModel
 @{
     ViewData["Title"] = "Explora propiedades";
-    var paginationValues = new Dictionary<string, object?>
-    {
-        ["PropertyTypeId"] = Model.Filters.PropertyTypeId,
-        ["PriceMin"] = Model.Filters.PriceMin,
-        ["PriceMax"] = Model.Filters.PriceMax,
-        ["Bedrooms"] = Model.Filters.Bedrooms,
-        ["Bathrooms"] = Model.Filters.Bathrooms,
-        ["Code"] = Model.Filters.Code,
-    };
+    var paginationValues = Model.Filters.RouteValues();
 }
 
 <div class="space-y-10">

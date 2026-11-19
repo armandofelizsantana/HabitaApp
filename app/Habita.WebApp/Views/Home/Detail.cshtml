@@ -53,7 +53,79 @@
 
             @if (Model.Improvements.Count > 0)
             {
-                <section class="rounded-3xl border border-default bg-[var(--color-bg-elevated)] p-6 sm:p-8"><h2 class="flex items-center gap-2 text-xl font-black text-default"><i data-lucide="sparkles" class="h-5 w-5 text-brand-600"></i>Características y características</h2><ul class="mt-5 flex flex-wrap gap-2" role="list">@foreach (var improvement in Model.Improvements) { <li class="inline-flex items-center gap-1.5 rounded-full border border-brand-100 bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-700 dark:border-brand-100/20 dark:bg-brand-100/10 dark:text-brand-500"><i data-lucide="check" class="h-3.5 w-3.5"></i>@improvement.Name</li> }</ul></section>
+                <section class="rounded-3xl border border-default bg-[var(--color-bg-elevated)] p-6 sm:p-8"><h2 class="flex items-center gap-2 text-xl font-black text-default"><i data-lucide="sparkles" class="h-5 w-5 text-brand-600"></i>Características</h2><ul class="mt-5 flex flex-wrap gap-2" role="list">@foreach (var improvement in Model.Improvements) { <li class="inline-flex items-center gap-1.5 rounded-full border border-brand-100 bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-700 dark:border-brand-100/20 dark:bg-brand-100/10 dark:text-brand-500"><i data-lucide="check" class="h-3.5 w-3.5"></i>@improvement.Name</li> }</ul></section>
+            }
+
+            @if (isOwner)
+            {
+                <section class="rounded-3xl border border-default bg-[var(--color-bg-elevated)] p-6 sm:p-8" aria-labelledby="agent-conversations-title">
+                    <div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-black uppercase tracking-[.14em] text-brand-600">Seguimiento</p><h2 id="agent-conversations-title" class="mt-1 text-xl font-black text-default">Conversaciones sobre esta propiedad</h2><p class="mt-1 text-sm text-muted">Clientes que han escrito por este inmueble.</p></div><span class="text-sm font-semibold text-muted">@Model.AgentConversations.TotalCount conversaciones</span></div>
+                    @if (Model.AgentConversations.Items.Count == 0)
+                    {
+                        <div class="mt-5 rounded-2xl border border-dashed border-default p-5 text-sm text-muted">Todavía no hay conversaciones sobre esta propiedad.</div>
+                    }
+                    else
+                    {
+                        <div class="mt-5 space-y-3" role="list" aria-label="Conversaciones por cliente">
+                            @foreach (var conversation in Model.AgentConversations.Items)
+                            {
+                                <a asp-controller="Message" asp-action="Conversation" asp-route-propertyId="@Model.Id" asp-route-clientId="@conversation.OtherUserId" class="block rounded-2xl border border-default p-4 transition hover:border-brand-300 hover:bg-brand-50/50" role="listitem">
+                                    <div class="flex flex-wrap items-start justify-between gap-2"><span class="font-black text-default">@conversation.OtherUserName</span><time class="text-xs text-muted" datetime="@conversation.LastMessageAt.ToString("o")">@conversation.LastMessageAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")</time></div>
+                                    <p class="mt-2 line-clamp-2 text-sm text-muted">@conversation.LastMessageContent</p>
+                                    <span class="mt-2 inline-block text-xs font-black text-brand-700">Abrir conversación</span>
+                                </a>
+                            }
+                        </div>
+                        @if (Model.AgentConversations.TotalPages > 1)
+                        {
+                            <div class="mt-4 flex justify-between gap-3">
+                                @if (Model.AgentConversations.Page > 1)
+                                {
+                                    <a asp-action="Detail" asp-route-id="@Model.Id" asp-route-conversationPage="@(Model.AgentConversations.Page - 1)" asp-route-offerPage="@Model.AgentOfferClients.Page" class="btn-secondary">Conversaciones anteriores</a>
+                                }
+                                @if (Model.AgentConversations.Page < Model.AgentConversations.TotalPages)
+                                {
+                                    <a asp-action="Detail" asp-route-id="@Model.Id" asp-route-conversationPage="@(Model.AgentConversations.Page + 1)" asp-route-offerPage="@Model.AgentOfferClients.Page" class="btn-secondary ml-auto">Más conversaciones</a>
+                                }
+                            </div>
+                        }
+                    }
+                </section>
+
+                <section class="rounded-3xl border border-default bg-[var(--color-bg-elevated)] p-6 sm:p-8" aria-labelledby="agent-offers-title">
+                    <div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-black uppercase tracking-[.14em] text-brand-600">Negociación</p><h2 id="agent-offers-title" class="mt-1 text-xl font-black text-default">Clientes interesados</h2><p class="mt-1 text-sm text-muted">Resumen de ofertas recibidas por propiedad.</p></div><span class="text-sm font-semibold text-muted">@Model.AgentOfferClients.TotalCount clientes</span></div>
+                    @if (Model.AgentOfferClients.Items.Count == 0)
+                    {
+                        <div class="mt-5 rounded-2xl border border-dashed border-default p-5 text-sm text-muted">Esta propiedad todavía no tiene ofertas.</div>
+                    }
+                    else
+                    {
+                        <div class="mt-5 grid gap-3 md:grid-cols-2" role="list" aria-label="Clientes que realizaron ofertas">
+                            @foreach (var client in Model.AgentOfferClients.Items)
+                            {
+                                <a asp-controller="Offer" asp-action="PropertyOffers" asp-route-propertyId="@Model.Id" asp-route-clientId="@client.ClientId" class="rounded-2xl border border-default p-4 transition hover:border-brand-300 hover:bg-brand-50/50" role="listitem">
+                                    <div class="flex items-start justify-between gap-3"><span class="font-black text-default">@client.ClientName</span><span class="@(client.LastStatus == "Accepted" ? "badge-success" : client.LastStatus == "Rejected" ? "badge-danger" : "badge-warning")">@client.LastStatusLabel</span></div>
+                                    <p class="mt-3 text-sm text-muted">@client.OfferCount @(client.OfferCount == 1 ? "oferta" : "ofertas") · última propuesta</p>
+                                    <p class="mt-1 text-lg font-black text-brand-700">@PriceHelper.Format(client.LastAmount, "DOP")</p>
+                                    <span class="mt-2 inline-block text-xs font-black text-brand-700">Ver historial de ofertas</span>
+                                </a>
+                            }
+                        </div>
+                        @if (Model.AgentOfferClients.TotalPages > 1)
+                        {
+                            <div class="mt-4 flex justify-between gap-3">
+                                @if (Model.AgentOfferClients.Page > 1)
+                                {
+                                    <a asp-action="Detail" asp-route-id="@Model.Id" asp-route-conversationPage="@Model.AgentConversations.Page" asp-route-offerPage="@(Model.AgentOfferClients.Page - 1)" class="btn-secondary">Ofertas anteriores</a>
+                                }
+                                @if (Model.AgentOfferClients.Page < Model.AgentOfferClients.TotalPages)
+                                {
+                                    <a asp-action="Detail" asp-route-id="@Model.Id" asp-route-conversationPage="@Model.AgentConversations.Page" asp-route-offerPage="@(Model.AgentOfferClients.Page + 1)" class="btn-secondary ml-auto">Más clientes</a>
+                                }
+                            </div>
+                        }
+                    }
+                </section>
             }
 
             @if (isClient)
@@ -103,7 +175,17 @@
         <aside class="xl:sticky xl:top-20 xl:self-start" aria-label="Información del agente">
             <section class="overflow-hidden rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 to-blue-50 p-6 shadow-sm dark:border-brand-100/20 dark:from-brand-100/15 dark:to-blue-100/10">
                 <p class="text-xs font-black uppercase tracking-[0.16em] text-brand-700 dark:text-brand-500">Tu asesor</p>
-                <div class="mt-4 flex items-center gap-3">@await Html.PartialAsync("~/Views/Shared/Components/_Avatar.cshtml", (Model.AgentProfileImage, Model.AgentName ?? "Agente", "lg", "ring-4 ring-white dark:ring-gray-800"))<div class="min-w-0"><h2 class="truncate text-lg font-black text-default">@Model.AgentName</h2><p class="text-sm text-muted">Agente inmobiliario</p></div></div>
+                @if (!string.IsNullOrWhiteSpace(Model.AgentId))
+                {
+                    <a asp-controller="Home" asp-action="AgentProperties" asp-route-id="@Model.AgentId" class="mt-4 flex items-center gap-3 rounded-2xl transition hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600" aria-label="Ver el perfil y las propiedades de @Model.AgentName">
+                        @await Html.PartialAsync("~/Views/Shared/Components/_Avatar.cshtml", (Model.AgentProfileImage, Model.AgentName ?? "Agente", "lg", "ring-4 ring-white dark:ring-gray-800"))
+                        <span class="min-w-0"><span class="block truncate text-lg font-black text-default">@Model.AgentName</span><span class="mt-0.5 block text-sm text-brand-700">Ver perfil y propiedades</span></span>
+                    </a>
+                }
+                else
+                {
+                    <div class="mt-4 flex items-center gap-3">@await Html.PartialAsync("~/Views/Shared/Components/_Avatar.cshtml", (Model.AgentProfileImage, Model.AgentName ?? "Agente", "lg", "ring-4 ring-white dark:ring-gray-800"))<div class="min-w-0"><h2 class="truncate text-lg font-black text-default">@Model.AgentName</h2><p class="text-sm text-muted">Agente inmobiliario</p></div></div>
+                }
                 <div class="mt-6 space-y-3">
                     @if (!string.IsNullOrWhiteSpace(Model.AgentPhone)) { <a href="tel:@Model.AgentPhone" class="flex items-center gap-3 rounded-2xl border border-white/80 bg-white/75 p-3 text-sm font-bold text-default transition hover:border-brand-100 hover:text-brand-600 dark:border-gray-700 dark:bg-gray-800/60"><span class="truncate">@Model.AgentPhone</span></a> }
                     @if (!string.IsNullOrWhiteSpace(Model.AgentEmail)) { <a href="mailto:@Model.AgentEmail" class="flex items-center gap-3 rounded-2xl border border-white/80 bg-white/75 p-3 text-sm font-bold text-default transition hover:border-brand-100 hover:text-brand-600 dark:border-gray-700 dark:bg-gray-800/60"><span class="truncate">@Model.AgentEmail</span></a> }

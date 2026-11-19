@@ -71,7 +71,8 @@ public sealed class GetMyConversationsUseCase : IGetMyConversationsUseCase
             allMessages = await _messageRepository.GetAllAsync(
                 new QueryOptions<Message>
                 {
-                    Filter = m => m.ClientId == _currentUser.UserId,
+                    Filter = m => m.ClientId == _currentUser.UserId
+                        && (!request.PropertyId.HasValue || m.PropertyId == request.PropertyId.Value),
                     Includes = [m => m.Property],
                     OrderBy = q => q.OrderByDescending(m => m.CreatedAt),
                 },
@@ -128,6 +129,14 @@ public sealed class GetMyConversationsUseCase : IGetMyConversationsUseCase
             );
             var propertyIds = properties.Select(p => p.Id).ToList();
 
+            if (request.PropertyId.HasValue && !propertyIds.Contains(request.PropertyId.Value))
+                return Result<PagedResult<ConversationSummaryResponse>>.Failure(
+                    Error.Forbidden(
+                        "Conversation.NotOwner",
+                        "Solo puedes consultar conversaciones de tus propiedades."
+                    )
+                );
+
             if (propertyIds.Count == 0)
                 return Result<PagedResult<ConversationSummaryResponse>>.Success(
                     new PagedResult<ConversationSummaryResponse>(
@@ -141,7 +150,8 @@ public sealed class GetMyConversationsUseCase : IGetMyConversationsUseCase
             allMessages = await _messageRepository.GetAllAsync(
                 new QueryOptions<Message>
                 {
-                    Filter = m => propertyIds.Contains(m.PropertyId),
+                    Filter = m => propertyIds.Contains(m.PropertyId)
+                        && (!request.PropertyId.HasValue || m.PropertyId == request.PropertyId.Value),
                     Includes = [m => m.Property],
                     OrderBy = q => q.OrderByDescending(m => m.CreatedAt),
                 },

@@ -1,3 +1,4 @@
+using Habita.Application.ViewModels.Property;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Habita.Application.Adapters;
@@ -46,13 +47,22 @@ public sealed class AgentController : BaseController
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+    [PropertyFilters]
+    public async Task<IActionResult> Index([FromQuery] PropertyFilterViewModel filters, CancellationToken cancellationToken = default)
     {
                                                                                        
         var availableResult = await _getAgentProperties.ExecuteAsync(
-            new GetAgentPropertiesRequest(1, DashboardPropertyCount, PropertyStatus.Available),
+            new GetAgentPropertiesRequest(1, DashboardPropertyCount, PropertyStatus.Available, filters.ToCriteria()),
             cancellationToken
         );
+        var availableTotal = availableResult.IsSuccess ? availableResult.GetValue().TotalCount : 0;
+        if (filters.HasCriteria)
+        {
+            var unfiltered = await _getAgentProperties.ExecuteAsync(
+                new GetAgentPropertiesRequest(1, 1, PropertyStatus.Available), cancellationToken);
+            if (unfiltered.IsSuccess)
+                availableTotal = unfiltered.GetValue().TotalCount;
+        }
         var soldResult = await _getAgentProperties.ExecuteAsync(
             new GetAgentPropertiesRequest(1, DashboardPropertyCount, PropertyStatus.Sold),
             cancellationToken
@@ -72,9 +82,7 @@ public sealed class AgentController : BaseController
             SoldProperties = soldResult.IsSuccess
                 ? _mapper.Map<IReadOnlyList<AgentPropertyListItemViewModel>>(soldResult.GetValue().Items)
                 : [],
-            AvailablePropertiesCount = availableResult.IsSuccess
-                ? availableResult.GetValue().TotalCount
-                : 0,
+            AvailablePropertiesCount = availableTotal,
             SoldPropertiesCount = soldResult.IsSuccess ? soldResult.GetValue().TotalCount : 0,
             ConversationsCount = chatResult.IsSuccess ? chatResult.GetValue().TotalCount : 0,
         };
@@ -84,6 +92,7 @@ public sealed class AgentController : BaseController
         if (soldResult.IsFailure)
             ModelState.AddModelError(string.Empty, soldResult.GetError().Message);
 
+        viewModel.Filters = filters;
         await this.PopulateBaseViewModelAsync(viewModel, _viewModelBuilder, cancellationToken);
         return View(viewModel);
     }

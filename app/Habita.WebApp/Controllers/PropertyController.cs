@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Habita.Application.Adapters;
+using Habita.Application.Dtos.Chat.Requests;
 using Habita.Application.Dtos.Catalog.Requests;
 using Habita.Application.Dtos.Favorites.Requests;
 using Habita.Application.Dtos.Offers.Requests;
@@ -13,7 +14,9 @@ using Habita.Application.Interfaces.UseCases.Favorites;
 using Habita.Application.Interfaces.UseCases.Offers;
 using Habita.Application.Interfaces.UseCases.Property;
 using Habita.Application.ViewModels.Agent;
+using Habita.Application.ViewModels.Chat;
 using Habita.Application.ViewModels.Home;
+using Habita.Application.ViewModels.Offers;
 using Habita.Application.ViewModels.Property;
 using Habita.Application.ViewModels.Shared;
 using Habita.Domain.Common;
@@ -37,13 +40,13 @@ public sealed class PropertyController : BaseController
     private readonly ICreatePropertyUseCase _createProperty;
     private readonly IUpdatePropertyUseCase _updateProperty;
     private readonly IDeletePropertyUseCase _deleteProperty;
-    private readonly IGetPublicPropertyTypesUseCase _getPublicPropertyTypes;
     private readonly IGetAllPropertyTypesUseCase _getPropertyTypes;
     private readonly IGetAllSaleTypesUseCase _getSaleTypes;
     private readonly IGetAllImprovementsUseCase _getImprovements;
     private readonly IAddFavoriteUseCase _addFavorite;
     private readonly IRemoveFavoriteUseCase _removeFavorite;
     private readonly IGetMyOffersUseCase _getMyOffers;
+    private readonly IAgentService _agentService;
     private readonly IViewModelBuilder<BaseViewModel> _viewModelBuilder;
     private readonly IMapper _mapper;
     private readonly IMemoryCache _cache;
@@ -56,13 +59,13 @@ public sealed class PropertyController : BaseController
         ICreatePropertyUseCase createProperty,
         IUpdatePropertyUseCase updateProperty,
         IDeletePropertyUseCase deleteProperty,
-        IGetPublicPropertyTypesUseCase getPublicPropertyTypes,
         IGetAllPropertyTypesUseCase getPropertyTypes,
         IGetAllSaleTypesUseCase getSaleTypes,
         IGetAllImprovementsUseCase getImprovements,
         IAddFavoriteUseCase addFavorite,
         IRemoveFavoriteUseCase removeFavorite,
         IGetMyOffersUseCase getMyOffers,
+        IAgentService agentService,
         IViewModelBuilder<BaseViewModel> viewModelBuilder,
         IMapper mapper,
         IMemoryCache cache
@@ -75,13 +78,13 @@ public sealed class PropertyController : BaseController
         _createProperty = createProperty;
         _updateProperty = updateProperty;
         _deleteProperty = deleteProperty;
-        _getPublicPropertyTypes = getPublicPropertyTypes;
         _getPropertyTypes = getPropertyTypes;
         _getSaleTypes = getSaleTypes;
         _getImprovements = getImprovements;
         _addFavorite = addFavorite;
         _removeFavorite = removeFavorite;
         _getMyOffers = getMyOffers;
+        _agentService = agentService;
         _viewModelBuilder = viewModelBuilder;
         _mapper = mapper;
         _cache = cache;
@@ -90,6 +93,7 @@ public sealed class PropertyController : BaseController
     [HttpGet]
     [SessionAuthorize]
     [RoleAuthorize(nameof(Roles.Client))]
+    [PropertyFilters]
     public async Task<IActionResult> Index(
         [FromQuery] PropertyFilterViewModel filters,
         int page = 1,
@@ -97,34 +101,11 @@ public sealed class PropertyController : BaseController
     )
     {
         page = Math.Max(1, page);
-        filters.Code = filters.Code?.Trim();
-        filters.PropertyTypes = await GetPublicPropertyTypesAsync(cancellationToken);
-
-        if (
-            filters.PropertyTypeId.HasValue
-            && !filters.PropertyTypes.Any(type => type.Id == filters.PropertyTypeId.Value)
-        )
-        {
-            ModelState.AddModelError(
-                nameof(filters.PropertyTypeId),
-                "El tipo de propiedad seleccionado no existe."
-            );
-        }
-
         var properties = EmptyPage<PropertyListItemViewModel>(page);
         if (ModelState.IsValid)
         {
             var result = await _getPropertyList.ExecuteAsync(
-                new GetPropertyListRequest(
-                    Page: page,
-                    PageSize: PageSize,
-                    PriceMin: filters.PriceMin,
-                    PriceMax: filters.PriceMax,
-                    Bedrooms: filters.Bedrooms,
-                    Bathrooms: filters.Bathrooms,
-                    PropertyTypeId: filters.PropertyTypeId,
-                    Code: filters.Code
-                ),
+                filters.ToListRequest(page, PageSize),
                 cancellationToken
             );
 
@@ -140,7 +121,12 @@ public sealed class PropertyController : BaseController
     }
 
     [HttpGet]
-    public async Task<IActionResult> Detail(int id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Detail(
+        int id,
+        int conversationPage = 1,
+        int offerPage = 1,
+        CancellationToken cancellationToken = default
+    )
     {
         var result = await _getPropertyDetail.ExecuteAsync(
             new GetPropertyDetailRequest(id),
@@ -179,6 +165,49 @@ public sealed class PropertyController : BaseController
                 viewModel.Offers = _mapper.Map<IReadOnlyList<Application.ViewModels.Offers.OfferListItemViewModel>>(
                     offersResult.GetValue().Items
                 );
+        }
+        else if (isOwner)
+        {
+            conversationPage = Math.Max(1, conversationPage);
+            offerPage = Math.Max(1, offerPage);
+
+            var conversationsResult = await _agentService.GetChatListAsync(
+                new GetMyConversationsRequest(conversationPage, 8, id),
+                cancellationToken
+            );
+            if (conversationsResult.IsSuccess)
+            {
+                var conversations = conversationsResult.GetValue();
+                viewModel.AgentConversations = new PagedResult<ConversationSummaryViewModel>(
+                    _mapper.Map<IReadOnlyList<ConversationSummaryViewModel>>(conversations.Items),
+                    conversations.TotalCount,
+                    conversations.Page,
+                    conversations.PageSize
+                );
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, conversationsResult.GetError().Message);
+            }
+
+            var offerClientsResult = await _agentService.GetPropertyOfferClientsAsync(
+                new GetPropertyOfferClientsRequest(id, offerPage, 8),
+                cancellationToken
+            );
+            if (offerClientsResult.IsSuccess)
+            {
+                var clients = offerClientsResult.GetValue();
+                viewModel.AgentOfferClients = new PagedResult<OfferClientSummaryViewModel>(
+                    _mapper.Map<IReadOnlyList<OfferClientSummaryViewModel>>(clients.Items),
+                    clients.TotalCount,
+                    clients.Page,
+                    clients.PageSize
+                );
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, offerClientsResult.GetError().Message);
+            }
         }
         viewModel.PageTitle = $"{viewModel.PropertyTypeName} {viewModel.Code}";
         await this.PopulateBaseViewModelAsync(viewModel, _viewModelBuilder, cancellationToken);
@@ -238,14 +267,20 @@ public sealed class PropertyController : BaseController
     [HttpGet]
     [SessionAuthorize]
     [RoleAuthorize(nameof(Roles.Agent))]
+    [PropertyFilters]
     public async Task<IActionResult> MyProperties(
+        [FromQuery] PropertyFilterViewModel filters,
         int page = 1,
         CancellationToken cancellationToken = default
     )
     {
         page = Math.Max(1, page);
         var result = await _getAgentProperties.ExecuteAsync(
-            new GetAgentPropertiesRequest(page, PageSize, PropertyStatus.Available),
+            new GetAgentPropertiesRequest(page, PageSize, PropertyStatus.Available, filters.ToCriteria()),
+            cancellationToken
+        );
+        var soldResult = await _getAgentProperties.ExecuteAsync(
+            new GetAgentPropertiesRequest(1, 100, PropertyStatus.Sold),
             cancellationToken
         );
 
@@ -255,11 +290,18 @@ public sealed class PropertyController : BaseController
 
         if (result.IsFailure)
             ModelState.AddModelError(string.Empty, result.GetError().Message);
+        if (soldResult.IsFailure)
+            ModelState.AddModelError(string.Empty, soldResult.GetError().Message);
 
         var viewModel = new PropertyMaintenanceViewModel
         {
+            Filters = filters,
             PageTitle = "Mis propiedades",
             Properties = properties,
+            SoldProperties = soldResult.IsSuccess
+                ? _mapper.Map<IReadOnlyList<AgentPropertyListItemViewModel>>(soldResult.GetValue().Items)
+                : [],
+            SoldPropertiesCount = soldResult.IsSuccess ? soldResult.GetValue().TotalCount : 0,
         };
         await this.PopulateBaseViewModelAsync(viewModel, _viewModelBuilder, cancellationToken);
         return View(viewModel);
@@ -483,19 +525,6 @@ public sealed class PropertyController : BaseController
 
         this.SetSuccessMessage("La propiedad fue eliminada correctamente.");
         return RedirectToAction(nameof(MyProperties));
-    }
-
-    private async Task<IReadOnlyList<SelectListItemViewModel>> GetPublicPropertyTypesAsync(
-        CancellationToken cancellationToken
-    )
-    {
-        var result = await _getPublicPropertyTypes.ExecuteAsync(
-            new GetPublicPropertyTypesRequest(),
-            cancellationToken
-        );
-        return result.IsSuccess
-            ? _mapper.Map<IReadOnlyList<SelectListItemViewModel>>(result.GetValue())
-            : [];
     }
 
     private async Task LoadFormOptionsAsync(

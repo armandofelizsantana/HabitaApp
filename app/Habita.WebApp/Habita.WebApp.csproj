@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Habita.Application\Habita.Application.csproj" />
@@ -19,6 +19,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PreserveCompilationContext>true</PreserveCompilationContext>
+    <UserSecretsId>75e56ecb-d762-48ee-886a-fd4e60f3711f</UserSecretsId>
   </PropertyGroup>
 
 </Project>

@@ -14,7 +14,7 @@
             <h1 class="mt-2 text-3xl font-black tracking-tight text-default">Vista general</h1>
             <p class="mt-2 max-w-2xl text-sm leading-6 text-muted">Actividad de propiedades y cuentas de la plataforma.</p>
         </div>
-        <a asp-controller="User" asp-action="Agents" class="btn-primary">Revisar agentes</a>
+        <a asp-controller="User" asp-action="Clients" class="btn-primary">Revisar usuarios</a>
     </header>
 
     <section class="grid gap-5 xl:grid-cols-3" aria-label="Resumen y accesos administrativos">
@@ -42,7 +42,7 @@
             <h2 class="mt-2 text-xl font-black">Administrar Habita</h2>
             <p class="mt-2 text-sm leading-6 text-white/70">Accede directamente a cuentas y catálogos.</p>
             <nav class="mt-6 grid gap-2" aria-label="Accesos rápidos">
-                <a asp-controller="User" asp-action="Agents" class="flex justify-between rounded-xl bg-white/10 px-4 py-3 text-sm font-bold transition hover:bg-white/20">Usuarios <span aria-hidden="true">›</span></a>
+                <a asp-controller="User" asp-action="Clients" class="flex justify-between rounded-xl bg-white/10 px-4 py-3 text-sm font-bold transition hover:bg-white/20">Usuarios <span aria-hidden="true">›</span></a>
                 <a asp-controller="User" asp-action="Admins" class="flex justify-between rounded-xl bg-white/10 px-4 py-3 text-sm font-bold transition hover:bg-white/20">Administradores <span aria-hidden="true">›</span></a>
                 <a asp-controller="User" asp-action="Developers" class="flex justify-between rounded-xl bg-white/10 px-4 py-3 text-sm font-bold transition hover:bg-white/20">Desarrolladores <span aria-hidden="true">›</span></a>
                 <a asp-controller="PropertyType" asp-action="Index" class="flex justify-between rounded-xl bg-white/10 px-4 py-3 text-sm font-bold transition hover:bg-white/20">Catálogos <span aria-hidden="true">›</span></a>
@@ -54,7 +54,7 @@
         <div class="mb-4 flex items-end justify-between gap-4"><div><p class="text-xs font-black uppercase tracking-[.14em] text-muted">Acceso y operación</p><h2 id="accounts-heading" class="mt-1 text-xl font-black text-default">Cuentas por rol</h2></div><a asp-controller="User" asp-action="Agents" class="text-sm font-bold text-brand-700 dark:text-brand-400">Ver usuarios</a></div>
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <a asp-controller="User" asp-action="Agents" class="rounded-2xl border border-default bg-(--color-bg-elevated) p-5 transition hover:border-brand-300"><div class="flex items-center justify-between"><span class="text-sm font-bold text-muted">Agentes</span><span class="text-xs font-bold text-muted">@totalAgents registrados</span></div><p class="mt-4 text-3xl font-black text-default">@Model.ActiveAgents <span class="text-sm font-semibold text-muted">activos</span></p><p class="mt-1 text-xs text-muted">@Model.InactiveAgents pendientes o inactivos</p></a>
-            <article class="rounded-2xl border border-default bg-(--color-bg-elevated) p-5"><div class="flex items-center justify-between"><span class="text-sm font-bold text-muted">Clientes</span><span class="text-xs font-bold text-muted">@totalClients registrados</span></div><p class="mt-4 text-3xl font-black text-default">@Model.ActiveClients <span class="text-sm font-semibold text-muted">activos</span></p><p class="mt-1 text-xs text-muted">@Model.InactiveClients inactivos</p></article>
+            <a asp-controller="User" asp-action="Clients" class="rounded-2xl border border-default bg-(--color-bg-elevated) p-5 transition hover:border-brand-300"><div class="flex items-center justify-between"><span class="text-sm font-bold text-muted">Clientes</span><span class="text-xs font-bold text-muted">@totalClients registrados</span></div><p class="mt-4 text-3xl font-black text-default">@Model.ActiveClients <span class="text-sm font-semibold text-muted">activos</span></p><p class="mt-1 text-xs text-muted">@Model.InactiveClients inactivos</p></a>
             <a asp-controller="User" asp-action="Developers" class="rounded-2xl border border-default bg-(--color-bg-elevated) p-5 transition hover:border-brand-300"><div class="flex items-center justify-between"><span class="text-sm font-bold text-muted">Desarrolladores</span><span class="text-xs font-bold text-muted">@totalDevelopers registrados</span></div><p class="mt-4 text-3xl font-black text-default">@Model.ActiveDevelopers <span class="text-sm font-semibold text-muted">activos</span></p><p class="mt-1 text-xs text-muted">@Model.InactiveDevelopers inactivos</p></a>
         </div>
     </section>

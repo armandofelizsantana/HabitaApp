@@ -5,6 +5,8 @@ using Habita.Application.ViewModels.Shared;
 
 public sealed class MyFavoritesViewModel : BaseViewModel
 {
+    public Habita.Application.ViewModels.Property.PropertyFilterViewModel Filters { get; set; } = new();
+
     public PagedResult<FavoriteListItemViewModel> Favorites { get; init; } = new([], 0, 1, 12);
 }
 

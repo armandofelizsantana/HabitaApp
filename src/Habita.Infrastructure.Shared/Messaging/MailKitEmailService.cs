@@ -103,13 +103,14 @@ public class MailKitEmailService : IEmailService
                 );
             }
 
-            await client.SendAsync(message, cancellationToken);
+            var smtpResponse = await client.SendAsync(message, cancellationToken);
             await client.DisconnectAsync(true, cancellationToken);
 
             _logger.LogInformation(
-                "Correo enviado exitosamente a {Email}. Asunto: {Subject}",
+                "El servidor SMTP aceptó el correo para {Email}. Asunto: {Subject}. Respuesta: {SmtpResponse}",
                 to,
-                subject
+                subject,
+                smtpResponse
             );
 
             return true;

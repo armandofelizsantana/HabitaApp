@@ -336,6 +336,11 @@ public sealed class AuthController : BaseController
     public IActionResult AccessDenied() => View("~/Views/Shared/AccessDenied.cshtml");
 
     [HttpGet]
+    public IActionResult RoleHome() => CurrentUser.IsAuthenticated
+        ? RedirectByRole(CurrentUser.Roles)
+        : RedirectToAction("Index", "Home");
+
+    [HttpGet]
     [SessionAuthorize]
     public IActionResult ChangePassword() => View(new ChangePasswordViewModel());
 

@@ -1,3 +1,5 @@
+using Habita.Application.Interfaces;
+using Habita.Application.Models.Emails;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -13,18 +15,21 @@ namespace Habita.Infrastructure.Identity.UseCases.Admin;
 
 public sealed class ToggleAgentActiveUseCase : IToggleAgentActiveUseCase
 {
+    private readonly IEmailService _emailService;
     private readonly UserManager<AppUser> _userManager;
     private readonly ICurrentUserService _currentUser;
     private readonly IValidator<ToggleAgentActiveRequest> _validator;
     private readonly ILogger<ToggleAgentActiveUseCase> _logger;
 
     public ToggleAgentActiveUseCase(
+        IEmailService emailService,
         UserManager<AppUser> userManager,
         ICurrentUserService currentUser,
         IValidator<ToggleAgentActiveRequest> validator,
         ILogger<ToggleAgentActiveUseCase> logger
     )
     {
+        _emailService = emailService;
         _userManager = userManager;
         _currentUser = currentUser;
         _validator = validator;
@@ -59,6 +64,8 @@ public sealed class ToggleAgentActiveUseCase : IToggleAgentActiveUseCase
                 Error.Validation("User.NotAgent", "El usuario no tiene rol de Agente.")
             );
 
+        var wasActive = user.Active;
+
         if (user.Active)
             user.Deactivate();
         else
@@ -84,6 +91,28 @@ public sealed class ToggleAgentActiveUseCase : IToggleAgentActiveUseCase
             user.Active ? "activó" : "inactivó",
             request.AgentId
         );
+
+        if (!wasActive && user.Active)
+        {
+            var sent = await _emailService.SendEmailAsync(
+                user.Email!,
+                "Tu cuenta de agente en Habita ya está activa",
+                "AgentActivated",
+                new AgentActivatedModel(user.GetDisplayName()),
+                ct);
+            if (!sent)
+            {
+                _logger.LogWarning("Agente {AgentId} activado, pero no se pudo enviar el aviso por correo.", user.Id);
+                return Result.Failure(Error.Failure(
+                    "Agent.ActivationEmailFailed",
+                    "La cuenta quedó activa, pero el servidor de correo no aceptó el aviso. Revisa la salida de Habita para ver el error SMTP."));
+            }
+
+            _logger.LogInformation(
+                "Aviso de activación aceptado por SMTP para el agente {AgentId}.",
+                user.Id
+            );
+        }
 
         return Result.Success();
     }

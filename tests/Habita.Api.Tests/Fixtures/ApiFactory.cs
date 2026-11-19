@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +12,8 @@ namespace Habita.Api.Tests.Fixtures;
 
 public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
+    private readonly string _jwtKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
     private readonly MsSqlContainer _container = new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
         .WithCleanUp(true)
@@ -20,7 +23,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Development");
+        builder.UseEnvironment("Testing");
 
         builder.ConfigureAppConfiguration(
             (_, config) =>
@@ -29,6 +32,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
                     new Dictionary<string, string?>
                     {
                         ["ConnectionStrings:RealEstateDb"] = _container.GetConnectionString(),
+                        ["JwtSettings:SecretKey"] = _jwtKey,
+                        ["JwtSettings:Issuer"] = "Habita.Tests",
+                        ["JwtSettings:Audience"] = "Habita.Tests.Client",
+                        ["JwtSettings:DurationInMinutes"] = "60",
                     }
                 );
             }
@@ -37,6 +44,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.ConfigureServices(services =>
         {
             services.AddIdentityBackendUseCases();
+            services.AddSingleton<Habita.Application.Interfaces.IEmailService, TestEmailService>();
 
                                                                              
                                                                                                 
@@ -59,4 +67,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Client?.Dispose();
         await _container.DisposeAsync();
     }
+}
+
+internal sealed class TestEmailService : Habita.Application.Interfaces.IEmailService
+{
+    public Task<bool> SendEmailAsync<T>(string to, string subject, string templateName, T model, CancellationToken cancellationToken = default)
+        where T : Habita.Application.Models.Emails.IEmailModel => Task.FromResult(true);
 }

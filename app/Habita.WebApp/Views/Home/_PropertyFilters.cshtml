@@ -1,7 +1,21 @@
 @model PropertyFilterViewModel
+@{
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var agentId = ViewData["AgentFilterId"] as string;
+}
 
-<form asp-action="Index" method="get" class="space-y-5" aria-label="Filtros de propiedades">
-    @if (!string.IsNullOrWhiteSpace(Model.Code))
+<form asp-action="@action" asp-route-id="@agentId" method="get" class="space-y-5" aria-label="Filtros de propiedades">
+    @if (agentId is not null && ViewContext.RouteData.Values["id"] is null)
+    {
+        <input type="hidden" name="id" value="@agentId" />
+    }
+    @if (ViewData["ShowFilterCode"] is true)
+    {
+        <label class="label-base">Código de propiedad
+            <input name="Code" value="@Model.Code" class="input-base" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6 dígitos" />
+        </label>
+    }
+    else if (!string.IsNullOrWhiteSpace(Model.Code))
     {
         <input type="hidden" name="Code" value="@Model.Code" />
     }
@@ -44,6 +58,6 @@
 
     <div class="flex gap-3 border-t border-default pt-5">
         <button type="submit" class="btn-primary flex-1">Aplicar</button>
-            <a asp-action="Index" class="btn-secondary" aria-label="Limpiar filtros"><span class="hidden sm:inline">Limpiar</span></a>
-            </div>
-        </form>
+        <a asp-action="@action" asp-route-id="@agentId" class="btn-secondary">Limpiar</a>
+    </div>
+</form>

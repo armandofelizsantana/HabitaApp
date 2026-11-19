@@ -14,7 +14,9 @@ public sealed class AdminService : IAdminService
 {
     private readonly IGetAdminDashboardUseCase _dashboardUC;
     private readonly IGetAgentsListUseCase _getAgentsUC;
+    private readonly IGetClientsListUseCase _getClientsUC;
     private readonly IToggleAgentActiveUseCase _toggleAgentUC;
+    private readonly IToggleClientActiveUseCase _toggleClientUC;
     private readonly IChangeAgentStatusUseCase _changeAgentStatusUC;
     private readonly IDeleteAgentUseCase _deleteAgentUC;
     private readonly IGetAdminsListUseCase _getAdminsUC;
@@ -48,7 +50,9 @@ public sealed class AdminService : IAdminService
     public AdminService(
         IGetAdminDashboardUseCase dashboardUC,
         IGetAgentsListUseCase getAgentsUC,
+        IGetClientsListUseCase getClientsUC,
         IToggleAgentActiveUseCase toggleAgentUC,
+        IToggleClientActiveUseCase toggleClientUC,
         IChangeAgentStatusUseCase changeAgentStatusUC,
         IDeleteAgentUseCase deleteAgentUC,
         IGetAdminsListUseCase getAdminsUC,
@@ -82,7 +86,9 @@ public sealed class AdminService : IAdminService
     {
         _dashboardUC = dashboardUC;
         _getAgentsUC = getAgentsUC;
+        _getClientsUC = getClientsUC;
         _toggleAgentUC = toggleAgentUC;
+        _toggleClientUC = toggleClientUC;
         _changeAgentStatusUC = changeAgentStatusUC;
         _deleteAgentUC = deleteAgentUC;
         _getAdminsUC = getAdminsUC;
@@ -146,12 +152,33 @@ public sealed class AdminService : IAdminService
         return await _getAgentsUC.ExecuteAsync(request, ct);
     }
 
+    public async Task<Result<PagedResult<ClientListItemResponse>>> GetClientsAsync(
+        GetClientsListRequest request,
+        CancellationToken ct = default
+    )
+    {
+        if (!RequireAdmin())
+            return Forbidden<PagedResult<ClientListItemResponse>>(
+                "Solo administradores pueden ver el listado de clientes."
+            );
+
+        return await _getClientsUC.ExecuteAsync(request, ct);
+    }
+
     public async Task<Result> ToggleAgentStatusAsync(string agentId, CancellationToken ct = default)
     {
         if (!RequireAdmin())
             return Forbidden("Solo administradores pueden cambiar el estado de un agente.");
 
         return await _toggleAgentUC.ExecuteAsync(new ToggleAgentActiveRequest(agentId), ct);
+    }
+
+    public async Task<Result> ToggleClientStatusAsync(string clientId, CancellationToken ct = default)
+    {
+        if (!RequireAdmin())
+            return Forbidden("Solo administradores pueden cambiar el estado de un cliente.");
+
+        return await _toggleClientUC.ExecuteAsync(new ToggleClientActiveRequest(clientId), ct);
     }
 
     public async Task<Result> ChangeAgentStatusAsync(

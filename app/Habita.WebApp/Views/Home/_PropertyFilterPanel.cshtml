@@ -1,0 +1,10 @@
+@model PropertyFilterViewModel
+@{
+    ViewData["ShowFilterCode"] = true;
+}
+<details class="mb-5 rounded-2xl border border-default bg-(--color-bg-elevated) p-4" open="@(Model.HasCriteria || !ViewData.ModelState.IsValid)">
+    <summary class="cursor-pointer font-bold text-brand-700">Filtrar propiedades</summary>
+    <div class="mt-4 max-w-2xl">
+        <partial name="~/Views/Home/_PropertyFilters.cshtml" model="Model" />
+    </div>
+</details>

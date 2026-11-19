@@ -40,7 +40,28 @@
             @if (Model.Clients.Items.Count == 0) { <div class="rounded-3xl border border-dashed border-default bg-[var(--color-bg-elevated)]"><partial name="~/Views/Shared/Components/_EmptyState.cshtml" model='("inbox", "Esta propiedad aún no tiene ofertas", "Cuando un cliente presente una propuesta aparecerá aquí con su actividad más reciente.", "")' /></div> }
             else
             {
-                <div class="grid gap-4 md:grid-cols-2" role="list">@foreach (var client in Model.Clients.Items) { <a asp-action="PropertyOffers" asp-route-propertyId="@Model.PropertyId" asp-route-clientId="@client.ClientId" class="group rounded-3xl border border-default bg-[var(--color-bg-elevated)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-xl hover:shadow-brand-600/10" role="listitem"><div class="flex items-start justify-between gap-4"><div class="flex min-w-0 items-center gap-3"><div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700 transition group-hover:bg-brand-600 group-hover:text-white dark:bg-brand-100/15 dark:text-brand-500"></div><div class="min-w-0"><h3 class="truncate font-black text-default">@client.ClientName</h3><p class="mt-1 text-xs text-muted">@client.OfferCount @(client.OfferCount == 1 ? "oferta realizada" : "ofertas realizadas")</p></div></div><span class="@SummaryStatusClass(client)">@client.LastStatusLabel</span></div><div class="mt-5 flex items-end justify-between gap-4 border-t border-default pt-4"><div><p class="text-[10px] font-black uppercase tracking-wider text-subtle">Última oferta</p><p class="mt-1 text-xl font-black text-brand-600">@PriceHelper.Format(client.LastAmount, "DOP")</p><p class="mt-1 text-xs text-muted">@client.LastCreatedAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")</p></div><span class="inline-flex items-center gap-1 text-xs font-black text-brand-600">Ver historial</span></div></a> }</div>
+                <div class="grid gap-4 md:grid-cols-2" role="list">
+                    @foreach (var client in Model.Clients.Items)
+                    {
+                        <a asp-action="PropertyOffers" asp-route-propertyId="@Model.PropertyId" asp-route-clientId="@client.ClientId" class="group rounded-3xl border border-default bg-[var(--color-bg-elevated)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-xl hover:shadow-brand-600/10" role="listitem">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="min-w-0">
+                                    <h3 class="truncate font-black text-default">@client.ClientName</h3>
+                                    <p class="mt-1 text-xs text-muted">@client.OfferCount @(client.OfferCount == 1 ? "oferta realizada" : "ofertas realizadas")</p>
+                                </div>
+                                <span class="@SummaryStatusClass(client)">@client.LastStatusLabel</span>
+                            </div>
+                            <div class="mt-5 flex items-end justify-between gap-4 border-t border-default pt-4">
+                                <div>
+                                    <p class="text-[10px] font-black uppercase tracking-wider text-subtle">Última oferta</p>
+                                    <p class="mt-1 text-xl font-black text-brand-600">@PriceHelper.Format(client.LastAmount, "DOP")</p>
+                                    <p class="mt-1 text-xs text-muted">@client.LastCreatedAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")</p>
+                                </div>
+                                <span class="inline-flex items-center gap-1 text-xs font-black text-brand-600">Ver historial</span>
+                            </div>
+                        </a>
+                    }
+                </div>
                 <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel { Action = nameof(OfferController.PropertyOffers), Controller = "Offer", CurrentPage = Model.Clients.Page, TotalPages = Model.Clients.TotalPages, RouteValues = new Dictionary<string, object?> { ["propertyId"] = Model.PropertyId } }' />
             }
         }

@@ -22,12 +22,12 @@
     }
 
     <section class="grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]" aria-label="Mensajería">
-        <aside class="flex flex-col justify-between rounded-3xl bg-brand-700 p-6 text-white dark:bg-[#10594f]">
-            <div><p class="text-xs font-black uppercase tracking-[.16em] text-white/75">@(isAgent ? "Relación con clientes" : "Comunicación")</p><h1 class="mt-3 text-3xl font-black tracking-tight">@(isAgent ? "Bandeja de mensajes" : "Mis conversaciones")</h1><p class="mt-3 text-sm leading-6 text-white/85">@(isAgent ? "Responde consultas y mantén el contacto con personas interesadas en tus propiedades." : "Continúa tus consultas con los agentes desde un solo espacio.")</p></div>
-            <div class="mt-8 border-t border-white/20 pt-5"><p class="text-xs font-black uppercase tracking-wider text-white/75">Conversaciones</p><p class="mt-1 text-4xl font-black">@Model.Conversations.TotalCount</p><p class="mt-1 text-sm text-white/80">@(isAgent ? "con clientes interesados" : "con tus asesores")</p></div>
+        <aside class="flex flex-col justify-between rounded-3xl border border-brand-100 bg-brand-50 p-6 text-default shadow-sm">
+            <div><p class="text-xs font-black uppercase tracking-[.16em] text-brand-700">@(isAgent ? "Relación con clientes" : "Comunicación")</p><h1 class="mt-3 text-3xl font-black tracking-tight text-default">@(isAgent ? "Bandeja de mensajes" : "Mis conversaciones")</h1><p class="mt-3 text-sm leading-6 text-muted">@(isAgent ? "Responde consultas y mantén el contacto con personas interesadas en tus propiedades." : "Continúa tus consultas con los agentes desde un solo espacio.")</p></div>
+            <div class="mt-8 border-t border-brand-100 pt-5"><p class="text-xs font-black uppercase tracking-wider text-brand-700">Conversaciones</p><p class="mt-1 text-4xl font-black text-brand-700">@Model.Conversations.TotalCount</p><p class="mt-1 text-sm text-muted">@(isAgent ? "con clientes interesados" : "con tus asesores")</p></div>
             @if (!isAgent)
             {
-                <a asp-controller="Property" asp-action="Index" class="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-black text-brand-700 hover:bg-brand-50">Buscar propiedades</a>
+                <a asp-controller="Property" asp-action="Index" class="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-700 px-4 text-sm font-black text-white hover:bg-brand-600">Buscar propiedades</a>
             }
         </aside>
 

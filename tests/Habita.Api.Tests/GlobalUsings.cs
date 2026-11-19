@@ -7,3 +7,5 @@ global using FluentAssertions;
 global using Microsoft.AspNetCore.Mvc.Testing;
 global using Habita.Api.Tests.Fixtures;
 global using Xunit;
+
+[assembly: CollectionBehavior(MaxParallelThreads = 2)]

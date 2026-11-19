@@ -80,6 +80,9 @@ public sealed class DeleteSaleTypeUseCase : IDeleteSaleTypeUseCase
             cancellationToken
         );
 
+        _saleTypeRepo.Delete(saleType);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
         foreach (var property in properties)
         {
             foreach (var img in property.Images)
@@ -95,8 +98,7 @@ public sealed class DeleteSaleTypeUseCase : IDeleteSaleTypeUseCase
             }
         }
 
-        _saleTypeRepo.Delete(saleType);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
 
         _logger.LogInformation(
             "Tipo de venta {SaleTypeId} y {PropertyCount} propiedades asociadas eliminadas por admin {AdminId}.",

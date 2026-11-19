@@ -758,7 +758,7 @@ body { font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif; }
 :where(table) { border-collapse: separate; border-spacing: 0; }
 :where(th) { color: var(--color-text-muted); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
 .habita-gallery { box-shadow: var(--shadow-elevated); }
-.habita-dashboard { background: linear-gradient(112deg,#123f39 0%,#17695a 72%,#b8674b 150%); }
+.habita-dashboard { background: linear-gradient(112deg,#123f39 0%,#17695a 68%,#2d8575 100%); }
 .habita-dashboard::after { content:"";position:absolute;width:19rem;height:19rem;right:-5rem;top:-11rem;border:1px solid #ffffff38;border-radius:50%;box-shadow:0 0 0 2rem #ffffff0a,0 0 0 4rem #ffffff08;pointer-events:none; }
 .habita-dashboard a.bg-white { color:var(--color-brand-700); }
 .habita-page > header:not(.habita-dashboard) { border-radius: 1.35rem; }

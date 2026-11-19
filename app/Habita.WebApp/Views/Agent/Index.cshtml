@@ -44,7 +44,12 @@
                 <div><p class="text-xs font-black uppercase tracking-[.14em] text-brand-600">En mercado</p><h2 id="market-title" class="mt-1 text-2xl font-black text-default">Disponibles para negociación</h2></div>
                 <a asp-controller="Property" asp-action="MyProperties" class="btn-secondary">Ver todas</a>
             </div>
-            @if (Model.AvailableProperties.Count == 0)
+            <partial name="~/Views/Home/_PropertyFilterPanel.cshtml" model="Model.Filters" />
+            @if (!ViewData.ModelState.IsValid || (Model.Filters.HasCriteria && Model.AvailableProperties.Count == 0))
+            {
+                <p class="text-sm text-muted">No se encontraron propiedades con los filtros indicados.</p>
+            }
+            else if (Model.AvailableProperties.Count == 0)
             {
                 <div class="rounded-3xl border border-dashed border-default bg-(--color-bg-elevated)">
                     <partial name="~/Views/Shared/Components/_EmptyState.cshtml" model='("building-2", "No tienes propiedades disponibles", "Publica tu primer inmueble para comenzar a captar interesados.", "<a href=\"/Property/Create\" class=\"btn-primary\">Publicar propiedad</a>")' />

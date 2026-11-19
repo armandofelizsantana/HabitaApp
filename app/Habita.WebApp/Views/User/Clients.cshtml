@@ -1,0 +1,32 @@
+@model ClientListViewModel
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+    var routeValues = new Dictionary<string, object?>();
+    if (!string.IsNullOrWhiteSpace(Model.SearchTerm)) routeValues["searchTerm"] = Model.SearchTerm;
+}
+
+<div class="space-y-7">
+    <nav class="flex flex-wrap gap-2 border-b border-default pb-3" aria-label="Directorio de usuarios"><span class="rounded-full bg-brand-700 px-4 py-2 text-sm font-bold text-white" aria-current="page">Clientes</span><a asp-action="Agents" class="rounded-full px-4 py-2 text-sm font-bold text-muted hover:bg-(--color-bg-muted)">Agentes</a><a asp-action="Admins" class="rounded-full px-4 py-2 text-sm font-bold text-muted hover:bg-(--color-bg-muted)">Administradores</a><a asp-action="Developers" class="rounded-full px-4 py-2 text-sm font-bold text-muted hover:bg-(--color-bg-muted)">Desarrolladores</a></nav>
+
+    <header class="flex flex-wrap items-end justify-between gap-4"><div><p class="text-xs font-black uppercase tracking-[.16em] text-brand-600">Directorio / clientes</p><h1 class="mt-2 text-3xl font-black tracking-tight text-default">Clientes</h1><p class="mt-2 text-sm text-muted">Consulta las cuentas registradas y administra su acceso a Habita.</p></div><div class="rounded-2xl border border-default bg-(--color-bg-elevated) px-5 py-3 text-right"><p class="text-2xl font-black text-default">@Model.Items.TotalCount</p><p class="text-xs font-bold uppercase tracking-wide text-muted">registrados</p></div></header>
+
+    <form method="get" asp-action="Clients" class="flex flex-col gap-3 rounded-2xl border border-default bg-(--color-bg-elevated) p-4 sm:flex-row"><label for="client-admin-search" class="sr-only">Buscar clientes</label><input id="client-admin-search" type="search" name="searchTerm" value="@Model.SearchTerm" placeholder="Nombre, usuario o correo" class="input-base min-w-0 flex-1" /><button type="submit" class="btn-secondary">Buscar</button>@if (!string.IsNullOrWhiteSpace(Model.SearchTerm)){<a asp-action="Clients" class="btn-ghost text-sm">Limpiar</a>}</form>
+
+    @if (Model.Items.Items.Count == 0)
+    {
+        <div class="rounded-3xl border border-dashed border-default p-10 text-center"><p class="text-lg font-black text-default">No hay clientes para mostrar</p><p class="mt-2 text-sm text-muted">Cambia la búsqueda o vuelve más tarde.</p></div>
+    }
+    else
+    {
+        <section class="grid gap-4 xl:grid-cols-2" aria-label="Cuentas de clientes">
+            @foreach (var item in Model.Items.Items)
+            {
+                <article class="grid gap-5 rounded-2xl border border-default bg-(--color-bg-elevated) p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+                    <div><div class="flex flex-wrap items-center gap-2"><h2 class="text-lg font-black text-default">@item.FullName</h2><span class="rounded-full px-2.5 py-1 text-xs font-bold @(item.IsActive ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-100/10 dark:text-emerald-300" : "bg-amber-100 text-amber-900 dark:bg-amber-100/10 dark:text-amber-300")">@item.StatusLabel</span></div><p class="mt-1 text-sm text-muted">@@@item.UserName <span class="mx-1">·</span> @item.Email</p><div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs"><span><strong class="text-default">@(string.IsNullOrWhiteSpace(item.Phone) ? "Sin teléfono" : item.Phone)</strong></span><span class="text-muted">Cliente de Habita</span></div></div>
+                    <form asp-action="ToggleClientStatus" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="page" value="@Model.Items.Page" />@if (!string.IsNullOrWhiteSpace(Model.SearchTerm)){<input type="hidden" name="searchTerm" value="@Model.SearchTerm" />}<button type="submit" class="btn-secondary w-full text-sm">@(item.IsActive ? "Desactivar" : "Activar")</button></form>
+                </article>
+            }
+        </section>
+        <partial name="~/Views/Home/_Pagination.cshtml" model='new PaginationViewModel { Action = nameof(UserController.Clients), Controller = "User", CurrentPage = Model.Items.Page, TotalPages = Model.Items.TotalPages, RouteValues = routeValues }' />
+    }
+</div>

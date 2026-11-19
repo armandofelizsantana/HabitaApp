@@ -20,7 +20,12 @@
                  role="alert"></div>
         }
 
-        @if (Model.Favorites.Items.Count == 0)
+        <partial name="~/Views/Home/_PropertyFilterPanel.cshtml" model="Model.Filters" />
+        @if (!ViewData.ModelState.IsValid || (Model.Filters.HasCriteria && Model.Favorites.Items.Count == 0))
+        {
+            <p class="text-sm text-muted">No se encontraron propiedades con los filtros indicados.</p>
+        }
+        else if (Model.Favorites.Items.Count == 0)
         {
             <div class="rounded-3xl border border-dashed border-default bg-(--color-bg-elevated)">
                 <partial name="~/Views/Shared/Components/_EmptyState.cshtml"
@@ -75,6 +80,6 @@
                                         }
                                     </div>
                                     <partial name="~/Views/Home/_Pagination.cshtml"
-                                             model='new PaginationViewModel { Action = nameof(ClientController.Favorites), Controller = "Client", CurrentPage = Model.Favorites.Page, TotalPages = Model.Favorites.TotalPages }' />
+                                             model='new PaginationViewModel { Action = nameof(ClientController.Favorites), Controller = "Client", CurrentPage = Model.Favorites.Page, TotalPages = Model.Favorites.TotalPages, RouteValues = Model.Filters.RouteValues() }' />
                                 }
                             </div>

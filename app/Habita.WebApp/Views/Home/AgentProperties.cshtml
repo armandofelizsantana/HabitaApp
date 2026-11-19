@@ -1,7 +1,9 @@
 @model PublicAgentPropertiesViewModel
 @{
     ViewData["Title"] = $"Propiedades de {Model.Agent.FullName}";
-    var paginationValues = new Dictionary<string, object?> { ["id"] = Model.Agent.Id };
+    ViewData["AgentFilterId"] = Model.Agent.Id;
+    var paginationValues = Model.Filters.RouteValues();
+    paginationValues["id"] = Model.Agent.Id;
 }
 
 <div class="space-y-8">
@@ -30,7 +32,13 @@
                             </div>
                             <p class="text-sm text-muted">@Model.Properties.TotalCount @(Model.Properties.TotalCount == 1 ? "propiedad"                : "propiedades")</p>
                         </div>
-                        @if (Model.Properties.Items.Count == 0)
+                        <partial name="~/Views/Home/_PropertyFilterPanel.cshtml" model="Model.Filters" />
+                        <div asp-validation-summary="All" class="validation-summary" role="alert"></div>
+                        @if (!ViewData.ModelState.IsValid || (Model.Filters.HasCriteria && Model.Properties.Items.Count == 0))
+                        {
+                            <p class="text-sm text-muted">No se encontraron propiedades con los filtros indicados.</p>
+                        }
+                        else if (Model.Properties.Items.Count == 0)
                         {
                             var emptyState = (
                                 "house-heart",

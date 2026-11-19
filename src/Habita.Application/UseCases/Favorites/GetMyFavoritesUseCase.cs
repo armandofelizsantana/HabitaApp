@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using AutoMapper;
 using FluentValidation;
 using Habita.Application.Common.Validation;
@@ -60,12 +61,15 @@ public sealed class GetMyFavoritesUseCase : IGetMyFavoritesUseCase
             cancellationToken
         );
 
+        Expression<Func<FavoriteProperty, bool>> filter = fp =>
+            fp.ClientId == clientId && fp.Property != null
+            && fp.Property.Status == PropertyStatus.Available && activeAgentIds.Contains(fp.Property.AgentId);
+        if (request.Filters is not null)
+            filter = request.Filters.Within(filter, fp => fp.Property);
+
         var options = new QueryOptions<FavoriteProperty>
         {
-            Filter = fp =>
-                fp.Property != null
-                && fp.Property.Status == PropertyStatus.Available
-                && activeAgentIds.Contains(fp.Property.AgentId),
+            Filter = filter,
             Includes =
             [
                 fp => fp.Property,
@@ -78,20 +82,8 @@ public sealed class GetMyFavoritesUseCase : IGetMyFavoritesUseCase
             Take = request.PageSize,
         };
 
-        var favorites = await _favoriteRepository.GetByUserAsync(
-            clientId,
-            options,
-            cancellationToken
-        );
-
-        var totalCount = await _favoriteRepository.CountAsync(
-            fp =>
-                fp.ClientId == clientId
-                && fp.Property != null
-                && fp.Property.Status == PropertyStatus.Available
-                && activeAgentIds.Contains(fp.Property.AgentId),
-            cancellationToken
-        );
+        var favorites = await _favoriteRepository.GetAllAsync(options, cancellationToken);
+        var totalCount = await _favoriteRepository.CountAsync(filter, cancellationToken);
 
         var items = favorites.Select(fp => _mapper.Map<FavoriteResponse>(fp)).ToList();
 

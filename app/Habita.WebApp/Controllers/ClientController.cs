@@ -49,11 +49,12 @@ public sealed class ClientController : BaseController
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+    [PropertyFilters]
+    public async Task<IActionResult> Index([FromQuery] PropertyFilterViewModel filters, CancellationToken cancellationToken = default)
     {
         var dashboardResult = await _clientService.GetDashboardAsync(cancellationToken);
         var propertiesResult = await _getPropertyList.ExecuteAsync(
-            new GetPropertyListRequest(PageSize: DashboardPropertyCount),
+            filters.ToListRequest(1, DashboardPropertyCount),
             cancellationToken
         );
 
@@ -86,21 +87,27 @@ public sealed class ClientController : BaseController
             );
         }
 
+        viewModel.Filters = filters;
         await this.PopulateBaseViewModelAsync(viewModel, _viewModelBuilder, cancellationToken);
         return View(viewModel);
     }
 
     [HttpGet]
-    public async Task<IActionResult> Favorites(int page = 1, CancellationToken cancellationToken = default)
+    [PropertyFilters]
+    public async Task<IActionResult> Favorites([FromQuery] PropertyFilterViewModel filters, int page = 1, CancellationToken cancellationToken = default)
     {
         page = Math.Max(1, page);
         var result = await _clientService.GetFavoritesAsync(
-            new GetMyFavoritesRequest(page, PageSize),
+            new GetMyFavoritesRequest(page, PageSize, filters.ToCriteria()),
             cancellationToken
         );
 
         if (result.IsSuccess && result.GetValue().TotalPages > 0 && page > result.GetValue().TotalPages)
-            return RedirectToAction(nameof(Favorites), new { page = result.GetValue().TotalPages });
+        {
+            var route = filters.RouteValues();
+            route["page"] = result.GetValue().TotalPages;
+            return RedirectToAction(nameof(Favorites), route);
+        }
 
         var favorites = result.IsSuccess
             ? MapPage(result.GetValue())
@@ -108,7 +115,7 @@ public sealed class ClientController : BaseController
         if (result.IsFailure)
             ModelState.AddModelError(string.Empty, result.GetError().Message);
 
-        var viewModel = new MyFavoritesViewModel { Favorites = favorites };
+        var viewModel = new MyFavoritesViewModel { Filters = filters, Favorites = favorites };
         await this.PopulateBaseViewModelAsync(viewModel, _viewModelBuilder, cancellationToken);
         return View(viewModel);
     }

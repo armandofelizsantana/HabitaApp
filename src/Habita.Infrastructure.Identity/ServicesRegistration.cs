@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Habita.Application.Interfaces;
 using Habita.Application.Interfaces.Services;
@@ -39,12 +40,6 @@ public static class ServicesRegistration
         IConfiguration configuration
     )
     {
-        var jwtSettings =
-            configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
-            ?? throw new InvalidOperationException(
-                "JwtSettings no está configurado correctamente en appsettings."
-            );
-
         services
             .AddAuthentication(opt =>
             {
@@ -52,8 +47,12 @@ public static class ServicesRegistration
                 opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 opt.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(opt =>
+            .AddJwtBearer();
+
+        services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<IOptions<JwtSettings>>((opt, settings) =>
             {
+                var jwtSettings = settings.Value;
                 opt.RequireHttpsMetadata = false;
                 opt.SaveToken = false;
                 opt.TokenValidationParameters = new TokenValidationParameters
@@ -261,10 +260,12 @@ public static class ServicesRegistration
     {
         services.AddScoped<IGetAdminDashboardUseCase, GetAdminDashboardUseCase>();
         services.AddScoped<IGetAgentsListUseCase, GetAgentsListUseCase>();
+        services.AddScoped<IGetClientsListUseCase, GetClientsListUseCase>();
         services.AddScoped<IGetAgentByIdUseCase, GetAgentByIdUseCase>();
         services.AddScoped<IGetAdminByIdUseCase, GetAdminByIdUseCase>();
         services.AddScoped<IGetDeveloperByIdUseCase, GetDeveloperByIdUseCase>();
         services.AddScoped<IToggleAgentActiveUseCase, ToggleAgentActiveUseCase>();
+        services.AddScoped<IToggleClientActiveUseCase, ToggleClientActiveUseCase>();
         services.AddScoped<IChangeAgentStatusUseCase, ChangeAgentStatusUseCase>();
         services.AddScoped<IDeleteAgentUseCase, DeleteAgentUseCase>();
         services.AddScoped<IGetAdminsListUseCase, GetAdminsListUseCase>();

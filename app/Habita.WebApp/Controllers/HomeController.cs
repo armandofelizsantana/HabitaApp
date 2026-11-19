@@ -1,3 +1,4 @@
+using Habita.WebApp.Filters;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +28,6 @@ public sealed class HomeController : BaseController
     private readonly IGetPropertyListUseCase _getPropertyList;
     private readonly IGetPropertyDetailUseCase _getPropertyDetail;
     private readonly IGetPublicAgentsUseCase _getPublicAgents;
-    private readonly IGetPublicPropertyTypesUseCase _getPublicPropertyTypes;
     private readonly IViewModelBuilder<BaseViewModel> _viewModelBuilder;
     private readonly IMapper _mapper;
 
@@ -36,7 +36,6 @@ public sealed class HomeController : BaseController
         IGetPropertyListUseCase getPropertyList,
         IGetPropertyDetailUseCase getPropertyDetail,
         IGetPublicAgentsUseCase getPublicAgents,
-        IGetPublicPropertyTypesUseCase getPublicPropertyTypes,
         IViewModelBuilder<BaseViewModel> viewModelBuilder,
         IMapper mapper
     )
@@ -45,12 +44,12 @@ public sealed class HomeController : BaseController
         _getPropertyList = getPropertyList;
         _getPropertyDetail = getPropertyDetail;
         _getPublicAgents = getPublicAgents;
-        _getPublicPropertyTypes = getPublicPropertyTypes;
         _viewModelBuilder = viewModelBuilder;
         _mapper = mapper;
     }
 
     [HttpGet]
+    [PropertyFilters]
     public async Task<IActionResult> Index(
         [FromQuery] PropertyFilterViewModel filters,
         int page = 1,
@@ -58,34 +57,11 @@ public sealed class HomeController : BaseController
     )
     {
         page = Math.Max(1, page);
-        filters.Code = filters.Code?.Trim();
-        filters.PropertyTypes = await GetPropertyTypesAsync(cancellationToken);
-
-        if (
-            filters.PropertyTypeId.HasValue
-            && !filters.PropertyTypes.Any(type => type.Id == filters.PropertyTypeId.Value)
-        )
-        {
-            ModelState.AddModelError(
-                nameof(filters.PropertyTypeId),
-                "El tipo de propiedad seleccionado no existe."
-            );
-        }
-
         var properties = EmptyPage<PropertyListItemViewModel>(page);
         if (ModelState.IsValid)
         {
             var result = await _getPropertyList.ExecuteAsync(
-                new GetPropertyListRequest(
-                    Page: page,
-                    PageSize: PageSize,
-                    PriceMin: filters.PriceMin,
-                    PriceMax: filters.PriceMax,
-                    Bedrooms: filters.Bedrooms,
-                    Bathrooms: filters.Bathrooms,
-                    PropertyTypeId: filters.PropertyTypeId,
-                    Code: filters.Code
-                ),
+                filters.ToListRequest(page, PageSize),
                 cancellationToken
             );
 
@@ -163,7 +139,9 @@ public sealed class HomeController : BaseController
     }
 
     [HttpGet]
+    [PropertyFilters]
     public async Task<IActionResult> AgentProperties(
+        [FromQuery] PropertyFilterViewModel filters,
         string? id,
         int page = 1,
         CancellationToken cancellationToken = default
@@ -188,23 +166,21 @@ public sealed class HomeController : BaseController
             return RedirectToAction(nameof(Agents));
         }
 
-        var propertyResult = await _getPropertyList.ExecuteAsync(
-            new GetPropertyListRequest(Page: page, PageSize: PageSize, AgentId: id),
-            cancellationToken
-        );
-
-        if (propertyResult.IsFailure)
+        var properties = EmptyPage<PropertyListItemViewModel>(page);
+        if (ModelState.IsValid)
         {
-            this.SetErrorMessage(propertyResult.GetError().Message);
-            return RedirectToAction(nameof(Agents));
+            var result = await _getPropertyList.ExecuteAsync(filters.ToListRequest(page, PageSize, id), cancellationToken);
+            if (result.IsSuccess)
+                properties = MapPage<PropertyListItemResponse, PropertyListItemViewModel>(result.GetValue());
+            else
+                ModelState.AddModelError(string.Empty, result.GetError().Message);
         }
 
         var viewModel = new PublicAgentPropertiesViewModel
         {
+            Filters = filters,
             Agent = _mapper.Map<PublicAgentListItemViewModel>(agentResult.GetValue().Items[0]),
-            Properties = MapPage<PropertyListItemResponse, PropertyListItemViewModel>(
-                propertyResult.GetValue()
-            ),
+            Properties = properties,
         };
         await this.PopulateBaseViewModelAsync(viewModel, _viewModelBuilder, cancellationToken);
         return View(viewModel);
@@ -216,20 +192,6 @@ public sealed class HomeController : BaseController
             "~/Views/Shared/Error.cshtml",
             new ErrorViewModel { RequestId = HttpContext.TraceIdentifier, StatusCode = 500 }
         );
-
-    private async Task<IReadOnlyList<SelectListItemViewModel>> GetPropertyTypesAsync(
-        CancellationToken cancellationToken
-    )
-    {
-        var result = await _getPublicPropertyTypes.ExecuteAsync(
-            new GetPublicPropertyTypesRequest(),
-            cancellationToken
-        );
-
-        return result.IsSuccess
-            ? _mapper.Map<IReadOnlyList<SelectListItemViewModel>>(result.GetValue())
-            : [];
-    }
 
     private PagedResult<TDestination> MapPage<TSource, TDestination>(PagedResult<TSource> page)
     {

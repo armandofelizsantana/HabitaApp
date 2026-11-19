@@ -113,21 +113,19 @@ public sealed class GetPropertyListUseCase : IGetPropertyListUseCase
             && req.SearchTerm.Length == 6
             && req.SearchTerm.All(char.IsDigit);
 
-        return p =>
+        Expression<Func<PropertyEntity, bool>> scope = p =>
             (req.IncludeAllStatuses || activeAgentIds.Contains(p.AgentId))
             && (req.IncludeAllStatuses || p.Status == PropertyStatus.Available)
             && (string.IsNullOrWhiteSpace(req.SearchTerm)
                 || p.Description.Contains(req.SearchTerm)
                 || (isCodeSearch && p.Code == PropertyCode.Unsafe(req.SearchTerm)))
-            && (!req.PriceMin.HasValue || p.Price.Amount >= req.PriceMin.Value)
-            && (!req.PriceMax.HasValue || p.Price.Amount <= req.PriceMax.Value)
             && (!req.SizeMin.HasValue || p.Size.Area >= req.SizeMin.Value)
             && (!req.SizeMax.HasValue || p.Size.Area <= req.SizeMax.Value)
-            && (!req.Bedrooms.HasValue || p.Bedrooms == req.Bedrooms.Value)
-            && (!req.Bathrooms.HasValue || p.Bathrooms == req.Bathrooms.Value)
-            && (!req.PropertyTypeId.HasValue || p.PropertyTypeId == req.PropertyTypeId.Value)
             && (!req.SaleTypeId.HasValue || p.SaleTypeId == req.SaleTypeId.Value)
-            && (string.IsNullOrWhiteSpace(req.Code) || p.Code == PropertyCode.Unsafe(req.Code))
             && (string.IsNullOrWhiteSpace(req.AgentId) || p.AgentId == req.AgentId);
+
+        var criteria = new PropertySearchCriteria(req.PropertyTypeId, req.PriceMin, req.PriceMax,
+            req.Bedrooms, req.Bathrooms, req.Code);
+        return criteria.Within(scope, p => p);
     }
 }

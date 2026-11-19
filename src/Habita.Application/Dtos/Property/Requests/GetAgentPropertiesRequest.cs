@@ -5,5 +5,6 @@ namespace Habita.Application.Dtos.Property.Requests;
 public sealed record GetAgentPropertiesRequest(
     int Page = 1,
     int PageSize = 20,
-    PropertyStatus? Status = null
+    PropertyStatus? Status = null,
+    PropertySearchCriteria? Filters = null
 );

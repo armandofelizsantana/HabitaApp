@@ -1,3 +1,5 @@
+using Habita.Application.Dtos.Property.Requests;
+
 namespace Habita.Application.Dtos.Favorites.Requests;
 
-public sealed record GetMyFavoritesRequest(int Page = 1, int PageSize = 20);
+public sealed record GetMyFavoritesRequest(int Page = 1, int PageSize = 20, PropertySearchCriteria? Filters = null);
